@@ -1,3 +1,6 @@
+v.0.9.6.3:
+- Redone Addon_Toggle a little as there are still bugs
+
 v.0.9.6.2:
 - Bug fix for misplaced variable in Addon_Toggle
 
