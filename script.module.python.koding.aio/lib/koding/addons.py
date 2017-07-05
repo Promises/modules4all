@@ -706,24 +706,18 @@ def Toggle_Addons(addon='all', enable=True, safe_mode=True, exclude_list=[], new
 Send through either a list of add-on ids or one single add-on id.
 The add-ons sent through will then be added to the addons*.db
 and enabled or disabled (depending on state sent through).
-
 WARNING: If safe_mode is set to False this directly edits the
 addons*.db rather than using JSON-RPC. Although directly amending
 the db is a lot quicker there is no guarantee it won't cause
 severe problems in later versions of Kodi (this was created for v17).
 DO NOT set safe_mode to False unless you 100% understand the consequences!
-
 CODE:  Toggle_Addons([addon, enable, safe_mode, exclude_list, new_only, refresh])
-
 AVAILABLE PARAMS:
-
     (*) addon  -  This can be a list of addon ids, one single id or
     'all' to enable/disable all. If enabling all you can still use
     the exclude_list for any you want excluded from this function.
-
     enable  -  By default this is set to True, if you want to disable
     the add-on(s) then set this to False.
-
     safe_mode  -  By default this is set to True which means the add-ons
     are enabled/disabled via JSON-RPC which is the method recommended by
     the XBMC foundation. Setting this to False will result in a much
@@ -731,18 +725,14 @@ AVAILABLE PARAMS:
     versions of Kodi and it may even cause corruption in future versions.
     Setting to False is NOT recommended and you should ONLY use this if
     you 100% understand the risks that you could break multiple setups.
-
     exclude_list  -  Send through a list of any add-on id's you do not
     want to be included in this command.
-
     new_only  -  By default this is set to True so only newly extracted
     add-on folders will be enabled/disabled. This means that any existing
     add-ons which have deliberately been disabled by the end user are
     not affected.
-
     refresh  - By default this is set to True, it will refresh the
     current container and also force a local update on your add-ons db.
-
 EXAMPLE CODE:
 from systemtools import Refresh
 xbmc.executebuiltin('ActivateWindow(Videos, addons://sources/video/)')
@@ -759,8 +749,8 @@ koding.Refresh('container')
     from filetools      import DB_Path_Check, Get_Contents
     from database       import DB_Query
     from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Timestamp
-    from web            import Validate_Link
 
+    kodi_ver        = int(float(xbmc.getInfoLabel("System.BuildVersion")[:2]))
     addons_db       = DB_Path_Check('addons')
     data_type       = Data_Type(addon)
     state           = int(bool(enable))
@@ -783,6 +773,7 @@ koding.Refresh('container')
 # Grab all the add-on ids from addons folder
     if addon == 'all':
         addon     = []
+        ADDONS    = xbmc.translatePath('special://home/addons')
         my_addons = Get_Contents(path=ADDONS, exclude_list=['packages','temp'])
         for item in my_addons:
             addon_id = Get_Addon_ID(item)
@@ -793,25 +784,13 @@ koding.Refresh('container')
     for addon_id in addon:
         if not addon_id in exclude_list and addon_id != '':
             dolog('CHECKING: %s'%addon_id)
-
-# Check ALL addons and not just newly extracted not yet in db
             if addon_id in disabled_list and not new_only and enable:
-                dolog('[1] Adding to temp list: %s'%addon_id)
                 temp_list.append(addon_id)
-
-# Check addons not in our disabled list and also aren't in the enabled list
             elif addon_id not in disabled_list and addon_id not in enabled_list:
-                dolog('[2] Adding to temp list: %s'%addon_id)
                 temp_list.append(addon_id)
-
-# Check addons that are already enabled, get ready to disable
             elif addon_id in enabled_list and not enable:
-                dolog('[3] Adding to temp list: %s'%addon_id)
                 temp_list.append(addon_id)
-
-# Check addons which are disabled get ready to enable (same as first if function??)
             elif addon_id in disabled_list and enable:
-                dolog('[4] Adding to temp list: %s'%addon_id)
                 temp_list.append(addon_id)
     addon = temp_list
 
@@ -832,8 +811,6 @@ koding.Refresh('container')
 
 # Using the safe_mode (JSON-RPC)
     else:
-        Refresh('addons')
-        xbmc.sleep(1000)
         final_enabled = []
         if state:
             my_value = 'true'
@@ -848,7 +825,6 @@ koding.Refresh('container')
             if state:
                 dolog('Checking dependencies for : %s'%my_addon)
                 dependencies = Dependency_Check(addon_id=my_addon, recursive=True)
-                dolog('Dependencies: %s'%dependencies)
 
 # traverse through the dependencies in reverse order attempting to enable
                 for item in reversed(dependencies):
@@ -862,29 +838,148 @@ koding.Refresh('container')
                             final_enabled.append(item)
 
 # Now the dependencies are enabled we need to enable the actual main add-on
-        bad_repo = []
-        for my_addon in addon:
             if not my_addon in final_enabled:
-                ok = True
-                addon_set = True
-                if 'repo' in my_addon:
-                    ok = Check_Repo(my_addon)
-                    if not ok:
-                        dolog('BAD REPO: %s IS NOT RESOLVING SO WE ARE NOT INSTALLING'%my_addon)
-                        addon_set = False
+                addon_set = Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value)
+            try:
                 if addon_set:
-                    addon_set = Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value)
-                if addon_set:
-                    dolog('%s now %s' % (my_addon, log_value))
-                    final_enabled.append(addon)
-                else:
-                    bad_repo.append(my_addon)
-        if len(bad_repo) > 0:
-            final_list = 'The following repostitories are not resolving so have not been installed: '
-            for item in bad_repo:
-                final_list += item+','
-            final_list = final_list[:-1]
-            dialog.ok('[COLOR=gold]BAD REPOSITORIES FOUND[/COLOR]',final_list)
+                dolog('%s now %s' % (my_addon, log_value))
+                final_enabled.append(addon)
+            except:
+                pass
     if refresh:
-        Refresh('container')
+        Refresh(['addons','container'])
+
+# NEW CODE NOT WORKING
+#     from __init__       import dolog
+#     from filetools      import DB_Path_Check, Get_Contents
+#     from database       import DB_Query
+#     from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Timestamp
+#     from web            import Validate_Link
+
+#     addons_db       = DB_Path_Check('addons')
+#     data_type       = Data_Type(addon)
+#     state           = int(bool(enable))
+#     enabled_list    = []
+#     disabled_list   = []
+#     if kodi_ver >= 17:
+#         on_system   = DB_Query(addons_db,'SELECT addonID, enabled from installed')
+# # Create a list of enabled and disabled add-ons already on system
+#         enabled_list  = Addon_List(enabled=True)
+#         disabled_list = Addon_List(enabled=False)
+
+# # If addon has been sent through as a string we add into a list
+#     if data_type == 'unicode':
+#         addon = addon.encode('utf8')
+#         data_type = Data_Type(addon)
+
+#     if data_type == 'str' and addon!= 'all':
+#         addon = [addon,'']
+
+# # Grab all the add-on ids from addons folder
+#     if addon == 'all':
+#         addon     = []
+#         my_addons = Get_Contents(path=ADDONS, exclude_list=['packages','temp'])
+#         for item in my_addons:
+#             addon_id = Get_Addon_ID(item)
+#             addon.append(addon_id)
+
+# # Find out what is and isn't enabled in the addons*.db
+#     temp_list = []
+#     for addon_id in addon:
+#         if not addon_id in exclude_list and addon_id != '':
+#             dolog('CHECKING: %s'%addon_id)
+
+# # Check ALL addons and not just newly extracted not yet in db
+#             if addon_id in disabled_list and not new_only and enable:
+#                 dolog('[1] Adding to temp list: %s'%addon_id)
+#                 temp_list.append(addon_id)
+
+# # Check addons not in our disabled list and also aren't in the enabled list
+#             elif addon_id not in disabled_list and addon_id not in enabled_list:
+#                 dolog('[2] Adding to temp list: %s'%addon_id)
+#                 temp_list.append(addon_id)
+
+# # Check addons that are already enabled, get ready to disable
+#             elif addon_id in enabled_list and not enable:
+#                 dolog('[3] Adding to temp list: %s'%addon_id)
+#                 temp_list.append(addon_id)
+
+# # Check addons which are disabled get ready to enable (same as first if function??)
+#             elif addon_id in disabled_list and enable:
+#                 dolog('[4] Adding to temp list: %s'%addon_id)
+#                 temp_list.append(addon_id)
+#     addon = temp_list
+
+# # If you want to bypass the JSON-RPC mode and directly modify the db (READ WARNING ABOVE!!!)
+#     if not safe_mode and kodi_ver >= 17:
+#         installedtime   = Timestamp('date_time')
+#         insert_query    = 'INSERT or IGNORE into installed (addonID , enabled, installDate) VALUES (?,?,?)'
+#         update_query    = 'UPDATE installed SET enabled = ? WHERE addonID = ? '
+#         insert_values   = [addon, state, installedtime]
+#         try:
+#             for item in addon:
+#                 DB_Query(addons_db, insert_query, [item, state, installedtime])
+#                 DB_Query(addons_db, update_query, [state, item])
+#         except:
+#             dolog(Last_Error())
+#         if refresh:
+#             Refresh()
+
+# # Using the safe_mode (JSON-RPC)
+#     else:
+#         Refresh('addons')
+#         xbmc.sleep(1000)
+#         final_enabled = []
+#         if state:
+#             my_value = 'true'
+#             log_value = 'ENABLED'
+#         else:
+#             my_value = 'false'
+#             log_value = 'DISABLED'
+
+#         for my_addon in addon:
+
+# # If enabling the add-on then we also check for dependencies and enable them first
+#             if state:
+#                 dolog('Checking dependencies for : %s'%my_addon)
+#                 dependencies = Dependency_Check(addon_id=my_addon, recursive=True)
+#                 dolog('Dependencies: %s'%dependencies)
+
+# # traverse through the dependencies in reverse order attempting to enable
+#                 for item in reversed(dependencies):
+#                     if not item in exclude_list and not item in final_enabled and not item in enabled_list:
+#                         dolog('Attempting to enable: %s'%item)
+#                         addon_set = Set_Setting(setting_type='addon_enable', setting=item, value = 'true')
+
+# # If we've successfully enabled then we add to list so we can skip any other instances
+#                         if addon_set:
+#                             dolog('%s now %s' % (my_addon, log_value))
+#                             final_enabled.append(item)
+
+# # Now the dependencies are enabled we need to enable the actual main add-on
+#         bad_repo = []
+#         for my_addon in addon:
+#             if not my_addon in final_enabled:
+#                 ok = True
+#                 addon_set = True
+#                 if 'repo' in my_addon:
+#                     ok = Check_Repo(my_addon)
+#                     if not ok:
+#                         dolog('BAD REPO: %s IS NOT RESOLVING SO WE ARE NOT INSTALLING'%my_addon)
+#                         addon_set = False
+#                 if addon_set:
+#                     addon_set = Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value)
+#                 if addon_set:
+#                     dolog('%s now %s' % (my_addon, log_value))
+#                     final_enabled.append(addon)
+#                 else:
+#                     bad_repo.append(my_addon)
+#         if len(bad_repo) > 0:
+#             final_list = 'The following repostitories are not resolving so have not been installed: '
+#             for item in bad_repo:
+#                 final_list += item+','
+#             final_list = final_list[:-1]
+#             dialog.ok('[COLOR=gold]BAD REPOSITORIES FOUND[/COLOR]',final_list)
+#     if refresh:
+#         Refresh('container')
 # ----------------------------------------------------------------

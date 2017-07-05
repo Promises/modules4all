@@ -1,3 +1,6 @@
+v.0.9.6.4:
+- Still a bug with toggle_addons locking up system so reverted that code to old.
+
 v.0.9.6.3:
 - Redone Addon_Toggle a little as there are still bugs
 
