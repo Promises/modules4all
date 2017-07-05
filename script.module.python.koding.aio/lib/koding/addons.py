@@ -842,8 +842,8 @@ koding.Refresh('container')
                 addon_set = Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value)
             try:
                 if addon_set:
-                dolog('%s now %s' % (my_addon, log_value))
-                final_enabled.append(addon)
+                    dolog('%s now %s' % (my_addon, log_value))
+                    final_enabled.append(addon)
             except:
                 pass
     if refresh:
