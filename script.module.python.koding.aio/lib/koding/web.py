@@ -277,15 +277,17 @@ koding.Text_Box('CONTENTS OF WEB PAGE',url_contents)
         return False
 #----------------------------------------------------------------
 # TUTORIAL #
-def Validate_Link(url=''):
+def Validate_Link(url='',timeout=30):
     """
 Returns the code for a particular link, so for example 200 is a good link and 404 is a URL not found
 
-CODE:   koding.Validate_Link(url)
+CODE:   koding.Validate_Link(url,[timeout])
 
 AVAILABLE PARAMS:
 
     (*) url  -  This is url you want to check the header code for
+
+    timeout  -  An optional timeout integer for checking url (default is 30 seconds)
 
 EXAMPLE CODE:
 url_code = koding.Validate_Link('http://totalrevolution.tv')
@@ -297,6 +299,9 @@ else:
     import requests
     import xbmc
 
-    r = requests.get(url)
-    return r.status_code
+    try:
+        r = requests.get(url,timeout=timeout)
+        return r.status_code
+    except:
+        return 400
 #----------------------------------------------------------------

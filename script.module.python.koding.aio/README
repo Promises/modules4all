@@ -259,11 +259,11 @@ if it contains paths that are no longer accessible online.
 
 IMPORTANT: If you're running an old version of Kodi which uses the old Python 2.6
 (OSX and Android lower than Kodi 17 or a linux install with old Python installed on system)
-you will get a return of True on https links regardless of their real status. This is due
+you will get a return of False on https links regardless of their real status. This is due
 to the fact Python 2.6 cannot access secure links. Any still using standard http links
 will return the correct results.
 
-	CODE:  Check_Repo(repo, [show_busy])
+	CODE:  Check_Repo(repo, [show_busy, timeout])
 
 	AVAILABLE PARAMS:
 
@@ -274,12 +274,15 @@ will return the correct results.
 
 	    show_busy - By default this is set to True and a busy dialog will show during the check
 
+	    timeout - By default this is set to 10 (seconds) - this is the maximum each request
+	    to the repo url will take before timing out and returning False.
+
 	EXAMPLE CODE:
-	repo_status = Check_Repo('repository.modules4all')
-	if repo_status:
-	    dialog.ok('REPO STATUS','The repository modules4all is: [COLOR=lime]ONLINE[/COLOR])
-	else:
-	    dialog.ok('REPO STATUS','The repository modules4all is: [COLOR=red]OFFLINE[/COLOR])
+		repo_status = Check_Repo('repository.noobsandnerds',show_busy=True,timeout=10)
+		if repo_status:
+		    dialog.ok('REPO STATUS','The repository modules4all is: [COLOR=lime]ONLINE[/COLOR]')
+		else:
+		    dialog.ok('REPO STATUS','The repository modules4all is: [COLOR=red]OFFLINE[/COLOR]')
 
 ------------------------------------------------------------------------------------------
 
@@ -2326,6 +2329,26 @@ will then split the params at every instance of an ampersand.
 	EXAMPLE CODE:
 		url_contents = koding.Open_URL('http://testpage.com?query1=value1&query2=value2', post_type='get')
 		koding.Text_Box('CONTENTS OF WEB PAGE',url_contents)
+
+------------------------------------------------------------------------------------------
+
+VALIDATE LINK:
+Returns the code for a particular link, so for example 200 is a good link and 404 is a URL not found
+
+	CODE:   koding.Validate_Link(url,[timeout])
+
+	AVAILABLE PARAMS:
+
+	    (*) url  -  This is url you want to check the header code for
+
+	    timeout  -  An optional timeout integer for checking url (default is 30 seconds)
+
+	EXAMPLE CODE:
+		url_code = koding.Validate_Link('http://totalrevolution.tv')
+		if url_code == 200:
+		    dialog.ok('WEBSITE STATUS','The website [COLOR=dodgerblue]totalrevolution.tv[/COLOR] is [COLOR=lime]ONLINE[/COLOR]')
+		else:
+	    dialog.ok('WEBSITE STATUS','The website [COLOR=dodgerblue]totalrevolution.tv[/COLOR] is [COLOR=red]OFFLINE[/COLOR]')
 
 ------------------------------------------------------------------------------------------
 

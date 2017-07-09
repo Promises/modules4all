@@ -385,18 +385,18 @@ def Check_Deps(addon_path, depfiles = []):
     return depfiles
 #----------------------------------------------------------------
 # TUTORIAL #
-def Check_Repo(repo,show_busy=True):
+def Check_Repo(repo,show_busy=True,timeout=10):
     """
 This will check the status of repo and return True if the repo is online or False
 if it contains paths that are no longer accessible online.
 
 IMPORTANT: If you're running an old version of Kodi which uses the old Python 2.6
 (OSX and Android lower than Kodi 17 or a linux install with old Python installed on system)
-you will get a return of True on https links regardless of their real status. This is due
+you will get a return of False on https links regardless of their real status. This is due
 to the fact Python 2.6 cannot access secure links. Any still using standard http links
 will return the correct results.
 
-CODE:  Check_Repo(repo, [show_busy])
+CODE:  Check_Repo(repo, [show_busy, timeout])
 
 AVAILABLE PARAMS:
 
@@ -407,8 +407,11 @@ AVAILABLE PARAMS:
 
     show_busy - By default this is set to True and a busy dialog will show during the check
 
+    timeout - By default this is set to 10 (seconds) - this is the maximum each request
+    to the repo url will take before timing out and returning False.
+
 EXAMPLE CODE:
-repo_status = Check_Repo('repository.noobsandnerds')
+repo_status = Check_Repo('repository.xxxecho',show_busy=False,timeout=10)
 if repo_status:
     dialog.ok('REPO STATUS','The repository modules4all is: [COLOR=lime]ONLINE[/COLOR]')
 else:
@@ -434,13 +437,12 @@ else:
         content  = Text_File(repo_path,'r')
         md5_urls = re.findall(r'<checksum>(.+?)</checksum>', content, re.DOTALL)
         for item in md5_urls:
-            if (item.startswith('https') and (kodi_ver >= 17)) or (item.startswith('http')):
-                link_status = Validate_Link(item)
-                dolog(item)
-                dolog('STATUS: %s'%link_status)
-                if link_status < 200 or link_status >= 400:
-                    status = False
-                    break
+            link_status = Validate_Link(item,timeout)
+            dolog(item)
+            dolog('STATUS: %s'%link_status)
+            if link_status < 200 or link_status >= 400:
+                status = False
+                break
         if show_busy:
             Show_Busy(False)
         return status
