@@ -28,6 +28,7 @@ import xbmcgui
 import filetools
 
 ADDONS      = xbmc.translatePath('special://home/addons')
+XBMC_PATH   = xbmc.translatePath('special://xbmc')
 kodi_ver    = int(float(xbmc.getInfoLabel("System.BuildVersion")[:2]))
 dialog      = xbmcgui.Dialog()
 
@@ -423,14 +424,16 @@ else:
     from filetools import Text_File
     from guitools  import Show_Busy
     from web       import Validate_Link
-
+    dolog('### CHECKING %s'%repo)
     status = True
     if show_busy:
         Show_Busy()
     if repo.startswith('special://'):
         repo_path = xbmc.translatePath(repo)
-    if not ADDONS in repo:
+    elif not ADDONS in repo and not XBMC_PATH in repo:
         repo_path = os.path.join(ADDONS,repo)
+    else:
+        repo_path = repo
     repo_path = os.path.join(repo_path,'addon.xml')
     dolog(repo_path)
     if os.path.exists(repo_path):
