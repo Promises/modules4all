@@ -165,7 +165,7 @@ play the video whereas Check_Playback does not actually try to
 play a video - it will just return True/False on whether or not
 a video is currently playing.
 
-CODE: Play_Video(video, [showbusy, content])
+CODE: Play_Video(video, [showbusy, content, ignore_dp, timeout, item])
 
 AVAILABLE PARAMS:
 
@@ -195,6 +195,14 @@ AVAILABLE PARAMS:
     ignore_dp is set to True then it will also add a potential 10s extra
     to this amount if a DialogProgress window is open. The default setting
     for this is 10s.
+
+    item  -  By default this is set to None and in this case the metadata
+    will be auto-populated from the previous Add_Dir so you'll just get the
+    basics like title, thumb and description. If you want to send through your
+    own metadata in the form of a dictionary you can do so and it will override
+    the auto-generation. If anything else sent through no metadata will be set,
+    you would use this option if you've already set metadata in a previous function.
+
 
 EXAMPLE CODE:
 isplaying = koding.Play_Video('http://totalrevolution.tv/videos/python_koding/Browse_To_Folder.mov')
@@ -232,8 +240,11 @@ else:
         else:
             item.setInfo(type='Video', infoLabels=meta)
 
-    else:
+    elif type(item).__name__ == 'dict':
         item.setInfo(type='Video', infoLabels=meta)
+
+    else:
+        pass
 
     playback = False
     if showbusy:
