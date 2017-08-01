@@ -58,7 +58,7 @@
 
 <addon id="script.module.python.koding.aio"
    name="Python Koding AIO"
-   version="0.9.6.6"
+   version="0.9.6.7"
    provider-name="Total Revolution, noobsandnerds">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
@@ -75,7 +75,7 @@
     <license>Creative Commons 4.0-NC-ND</license>
     <forum>http://noobsandnerds.com/support/showthread.php?tid=17614</forum>
     <website>http://totalrevolution.tv</website>
-    <news>Added ability to send through metadata as an item in Play_Video</news>
+    <news>Added new Custom_Dialog function for a fully customisable text dialog with multiple buttons</news>
     <source>https://github.com/totalrevolution/totalrevolution/tree/master/script.module.python.koding.aio</source>
   </extension>
 </addon>
