@@ -1,3 +1,12 @@
+v0.5.23
+- removed broken scrapers
+- added QuickMovies
+- added KingMovies
+- added MovieGrabber
+- added Watchfrees
+- fixed dizi720
+- Thank You to all involved with NaN Scraper Project
+
 v0.5.22
 - fixed solar
 

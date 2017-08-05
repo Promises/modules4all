@@ -193,7 +193,7 @@ class Alluc(Scraper):
         xml = [
             '<setting id="%s_enabled" ''type="bool" label="Enabled" default="true"/>' % (clas.name),
             '<setting id="%s_max" type="slider" label="Max Results for Search" default="20" range="5,200" option="int"/>' %(clas.name),
-            '<setting id= "%s_user" type="text" label="Username" default=0 />' % (clas.name),
-            '<setting id= "%s_pw" type="text" label="Password" default=0 />' % (clas.name)
+            '<setting id= "%s_user" type="text" label="Username" default=Username />' % (clas.name),
+            '<setting id= "%s_pw" type="text" label="Password" default=Password />' % (clas.name)
         ]
         return xml
