@@ -22,7 +22,7 @@ class Mfree(Scraper):
     def scrape_movie(self, title, year, imdb, debrid = False):
         try:
             headers = {'User-Agent': random_agent()}
-            q = (title.translate(None, '\/:*?"\'<>|!,')).replace(' ', '-').replace('--', '-').lower()
+            q = (title.translate(None, '\/:*?."\'<>|!,')).replace(' ', '-').replace('--', '-').lower()
             page = 1
             query = urlparse.urljoin(self.base_link, self.movie_search_link % q, page)
             cleaned_title = clean_title(title)
