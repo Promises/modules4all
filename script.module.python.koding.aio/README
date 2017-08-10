@@ -64,8 +64,7 @@ Your url must return a dictionary of items in this format: {"addon_name":"addon_
 ------------------------------------------------------------------------------------------
 
 ADD-ON ID FROM PATH:
-If you know the folder name of an add-on but want to find out the addon id (it may not necessarily be the same as folder name)
-then you can use this function. Even if the add-on isn't enabled on the system this will regex out the add-on id.
+If you know the folder name of an add-on but want to find out the addon id (it may not necessarily be the same as folder name) then you can use this function. Even if the add-on isn't enabled on the system this will regex out the add-on id.
 
 	CODE:  Get_Addon_ID(folder)
 
@@ -824,7 +823,8 @@ Similar behaviour to the standard Kodi yesno dialog but this allows as many butt
 as you want, as much text as you want (with a slider) as well as fully configurable
 sizing and positioning.
 
-	CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_text, buttons])
+	CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_content, buttons,
+	    header_color, text_color, background, transparency, highlight_color])
 
 	AVAILABLE PARAMS:
 
@@ -854,8 +854,6 @@ sizing and positioning.
 
 	    text_color  -  Set the text colour, by default it's 'white'
 
-	    highlight_color  -  Set the highlighted text colour, by default it's 'blue'
-
 	    main_content  -  This is sent through as a string and is the main message text
 	    you want to show in your dialog. When the ability to add videos, images etc.
 	    is added there may well be new options added to this param but it will remain
@@ -870,6 +868,8 @@ sizing and positioning.
 
 	    transparency  -  Set the percentage of transparency as an integer. By default
 	    it's set to 100 which is a solid colour.
+
+	    highlight_color  -  Set the highlighted text colour, by default it's 'blue'
 
 	EXAMPLE CODE:
 		main_text = 'This is my main text.\n\nYou can add anything you want in here and the slider will allow you to see all the contents.\n\nThis example shows using a blue background colour and a transparency of 90%.\n\nWe have also changed the highlighted_color to yellow.'
@@ -1713,11 +1713,11 @@ This will return the current running profile, it's only one line of code but thi
 anyone else's. I use this function quite a lot and keep forgetting the code so figured it would be easier to
 just write a simple function for it :)
 
-CODE:  Current_Profile()
+	CODE:  Current_Profile()
 
-EXAMPLE CODE:
-profile = koding.Current_Profile()
-dialog.ok('CURRENT PROFILE','Your current running profile is:','[COLOR=dodgerblue]%s[/COLOR]' % profile)
+	EXAMPLE CODE:
+		profile = koding.Current_Profile()
+		dialog.ok('CURRENT PROFILE','Your current running profile is:','[COLOR=dodgerblue]%s[/COLOR]' % profile)
 
 ------------------------------------------------------------------------------------------
 
@@ -1791,6 +1791,25 @@ Print to the Kodi log but only if debugging is enabled in settings.xml
 
 ------------------------------------------------------------------------------------------
 
+DECODE STRING TO CLEAN TEXT:
+This will allow you to send a string which contains a variety of special characters (including
+non ascii, unicode etc.) and it will convert into a nice clean string which plays nicely
+with Python and Kodi. If it contains characters which will not play nicely it will strip them.
+
+	CODE: Decode_String(string)
+
+	AVAILABLE PARAMS:
+	    
+	    (*) string - This is the string you want to convert
+
+	EXAMPLE CODE:
+		my_string = 'symbols like [COLOR dodgerblue]¥¨˚∆ƒπø“¬∂≈óõřĖė[/COLOR] can cause errors \nnormal chars like [COLOR dodgerblue]asfasdf[/COLOR] are fine'
+		dialog.ok('ORIGINAL TEXT',my_string)
+		my_string = koding.Decode_String(my_string)
+		dialog.ok('DECODED/STRIPPED',my_string)
+		
+------------------------------------------------------------------------------------------
+
 ENABLE/DISABLE/SET VARIOUS KODI SETTINGS:
 Use this to set built-in kodi settings via JSON or set skin settings.
 
@@ -1798,6 +1817,10 @@ Use this to set built-in kodi settings via JSON or set skin settings.
 
 	AVAILABLE PARAMS:
 	    
+	    (*) setting - This is the name of the setting you want to change, it could be a
+	    setting from the kodi settings or a skin based setting. If you're wanting
+	    to enable/disable an add-on this is set as the add-on id.
+
 	    setting_type - The type of setting type you want to change. By default
 	    it's set to 'kodi_setting', see below for more info.
 
@@ -1819,10 +1842,6 @@ Use this to set built-in kodi settings via JSON or set skin settings.
 
 	        'json' : WIP - setitng = method, value = params, see documentation on
 	        JSON-RPC API here: http://kodi.wiki/view/JSON-RPC_API)
-
-	    setting - This is the name of the setting you want to change, it could be a
-	    setting from the kodi settings or a skin based setting. If you're wanting
-	    to enable/disable an add-on this is set as the add-on id.
 
 	    value: This is the value you want to change the setting to. By default this
 	    is set to 'true'.

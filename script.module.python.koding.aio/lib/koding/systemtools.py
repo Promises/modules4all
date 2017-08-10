@@ -342,6 +342,31 @@ EXAMPLE CODE:
     return data_type
 #----------------------------------------------------------------
 # TUTORIAL #
+def Decode_String(string):
+    """
+This will allow you to send a string which contains a variety of special characters (including
+non ascii, unicode etc.) and it will convert into a nice clean string which plays nicely
+with Python and Kodi.
+
+CODE: Decode_String(string)
+
+AVAILABLE PARAMS:
+    
+    (*) string - This is the string you want to convert
+
+EXAMPLE CODE:
+my_string = 'symbols like [COLOR dodgerblue]¥¨˚∆ƒπø“¬∂≈óõřĖė[/COLOR] can cause errors \nnormal chars like [COLOR dodgerblue]asfasdf[/COLOR] are fine'
+dialog.ok('ORIGINAL TEXT',my_string)
+my_string = koding.Decode_String(my_string)
+dialog.ok('DECODED/STRIPPED',my_string)
+~"""
+    try:
+        string = string.encode('ascii', 'ignore')
+    except:
+        string = string.decode('utf-8').encode('ascii', 'ignore')
+    return string
+#----------------------------------------------------------------
+# TUTORIAL #
 def End_Path(path):
     """
 Split the path at every '/' and return the final file/folder name.

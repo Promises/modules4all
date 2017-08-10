@@ -163,7 +163,8 @@ Similar behaviour to the standard Kodi yesno dialog but this allows as many butt
 as you want, as much text as you want (with a slider) as well as fully configurable
 sizing and positioning.
 
-CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_text, buttons])
+CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_content, buttons,\
+    header_color, text_color, background, transparency, highlight_color])
 
 AVAILABLE PARAMS:
 
@@ -193,8 +194,6 @@ AVAILABLE PARAMS:
 
     text_color  -  Set the text colour, by default it's 'white'
 
-    highlight_color  -  Set the highlighted text colour, by default it's 'blue'
-
     main_content  -  This is sent through as a string and is the main message text
     you want to show in your dialog. When the ability to add videos, images etc.
     is added there may well be new options added to this param but it will remain
@@ -209,6 +208,8 @@ AVAILABLE PARAMS:
 
     transparency  -  Set the percentage of transparency as an integer. By default
     it's set to 100 which is a solid colour.
+
+    highlight_color  -  Set the highlighted text colour, by default it's 'blue'
 
 EXAMPLE CODE:
 main_text = 'This is my main text.\n\nYou can add anything you want in here and the slider will allow you to see all the contents.\n\nThis example shows using a blue background colour and a transparency of 90%.\n\nWe have also changed the highlighted_color to yellow.'
