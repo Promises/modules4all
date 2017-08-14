@@ -823,8 +823,9 @@ Similar behaviour to the standard Kodi yesno dialog but this allows as many butt
 as you want, as much text as you want (with a slider) as well as fully configurable
 sizing and positioning.
 
-	CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_content, buttons,
-	    header_color, text_color, background, transparency, highlight_color])
+	CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_content, buttons,\
+	    header_color, text_color, background, transparency, highlight_color, button_color_focused,\
+	    button_trans_focused, button_color_nonfocused, button_trans_nonfocused])
 
 	AVAILABLE PARAMS:
 
@@ -870,6 +871,18 @@ sizing and positioning.
 	    it's set to 100 which is a solid colour.
 
 	    highlight_color  -  Set the highlighted text colour, by default it's 'blue'
+
+	    button_color_focused - Using the same format as background you can set the
+	    colour to use for a button when it's focused.
+
+	    button_trans_focused - Using the same format as transparency you can set the
+	    transparency amount to use on the button when in focus.
+
+	    button_color_nonfocused - Using the same format as background you can set the
+	    colour to use for buttons when they are not in focus.
+
+	    button_trans_nonfocused - Using the same format as transparency you can set the
+	    transparency amount to use on the buttons when not in focus.
 
 	EXAMPLE CODE:
 		main_text = 'This is my main text.\n\nYou can add anything you want in here and the slider will allow you to see all the contents.\n\nThis example shows using a blue background colour and a transparency of 90%.\n\nWe have also changed the highlighted_color to yellow.'
@@ -2111,6 +2124,45 @@ distros so if you know of any improved code please do pass on. Thank you.
 
 ------------------------------------------------------------------------------------------
 
+PARSE XML:
+Send through the contents of an XML file and pull out a list of matching
+items in the form of dictionaries. When checking your results you should
+allow for lists to be returned, by default each tag found in the xml will
+be returned as a string but if multiple entries of the same tag exists your
+dictionary item will be a list. Although this can be used for many uses this
+was predominantly added for support of XML's which contain multiple links to video
+files using things like <sublink>. When checking to see if a string or list has been
+returned you can use the Data_Type function from Koding which will return 'str' or 'list'.
+
+	CODE: Parse_XML(source, block, tags)
+
+	AVAILABLE PARAMS:
+
+	    source  -  This is the original source file, this must already be read into
+	    memory as a string so made sure you've either used Open_URL or Text_File to
+	    read the contents before sending through.
+
+	    block -  This is the master tag you want to use for creating a dictionary of items.
+	    For example if you have an xml which contains multiple tags called <item> and you wanted
+	    to create a dictionary of sub items found in each of these you would just use 'item'.
+
+	    tags - This is a list of tags you want to return in your dictionary, so lets say each <item>
+	    section contains <link>, <title> and <thumb> tags you can return a dictionary of all those
+	    items by sending through ['link','title','thumb']
+
+	EXAMPLE CODE:
+		dialog.ok('DICTIONARY OF ITEMS','We will now attempt to return a list of details pulled from the noobsandnerds repository addon.xml (NaN repo needs to be installed for this to work).')
+		xml_file = xbmc.translatePath('special://home/addons/repository.noobsandnerds/addon.xml')
+		xml_file = koding.Text_File(xml_file,'r')
+		repo_details = koding.Parse_XML(source=xml_file, block='dir', tags=['info','checksum','datadir'])
+		counter = 0
+		for item in repo_details:
+		    dialog.ok( '[COLOR gold]REPO %s[/COLOR]'%(counter+1),'info path: %s\nchecksum path: %s\ndatadir: %s' % (repo_details[counter]['info'],repo_details[counter]['checksum'],repo_details[counter]['datadir']) )
+		    counter += 1
+		dialog.ok('[COLOR=dodgerblue]FINAL NOTICE[/COLOR]','You probably didn\'t notice but the details of the main noobsandnerds repo paths did NOT show, this is because they are not encapsulated in <dir> tags which we used as the \'block\' to check for.')
+
+------------------------------------------------------------------------------------------
+
 PATH TO CURRENT "LIVE" DATABASE:
 If you need to find out the current "real" database in use then this is the function for you. It will scan for a specific database type (e.g. addons) and return the path to the one which was last updated. This is particularly useful if the system's previously updated to a newer version rather than a fresh install - or if they've installed a "build" which contained old databases.
 
@@ -2377,15 +2429,54 @@ within a second or two of playback being successful (or not).
 		    xbmc.Player().stop()
 		else:
 		    dialog.ok('PLAYBACK FAILED','Sorry, playback failed :(')
+
+------------------------------------------------------------------------------------------
+
+M3U / M3U8 PLAYLIST SELECTOR:
+Send through an m3u/m3u8 playlist and have the contents displayed via a dialog select.
+The return will be a dictionary of 'name' and 'url'. You can send through either
+a locally stored filepath or an online URL.
+
+This function will try it's best to pull out the relevant playlist details even if the
+web page isn't a correctly formatted m3u playlist (e.g. an m3u playlist embedded into
+a blog page).
+
+	CODE: M3U_Selector(url, [post_type, header])
+
+	AVAILABLE PARAMS:
+	    (*) url  -  The location of your m3u file, this can be local or online
+
+	    post_type  -  If you need to use POST rather than a standard query string
+	    in your url set this to 'post', by default it's set to 'get'.
+
+	    header  -  This is the header you want to appear at the top of your dialog
+	    selection window, by default it's set to "Stream Selection"
+
+	EXAMPLE CODE:
+		# This example uses YouTube plugin paths but any playable paths will work
+		vid = koding.M3U_Selector(url='http://totalrevolution.tv/videos/playlists/youtube.m3u')
+
+		# Make sure there is a valid link returned
+		if vid:
+		    playback = koding.Play_Video(vid['url'])
+		if playback:
+		    dialog.ok('SUCCESS!','Congratulations the playback was successful!')
+	        xbmc.Player().stop()
+
+		else:
+		    dialog.ok('OOPS!','Looks like something went wrong there, the playback failed. Check the links are still valid.')
+
 ------------------------------------------------------------------------------------------
 
 PLAY VIDEO:
-This will attempt to play a video and return True or False on
-whether or not playback was successful. This function is similar
-to Check_Playback but this actually tries a number of methods to
-play the video whereas Check_Playback does not actually try to
-play a video - it will just return True/False on whether or not
-a video is currently playing.
+This will attempt to play a video and return True or False on whether or not playback was successful.
+This function is similar to Check_Playback but this actually tries a number of methods to play the
+video whereas Check_Playback does not actually try to play a video - it will just return True/False on
+whether or not a video is currently playing.
+
+If the video link sent through ends in m3u or m3u8 the links in that playlist will be shown in a dialog
+select window. Once the user clicks on the link they want the code will check for successful playback
+and return true or false.
 
 	CODE: Play_Video(video, [showbusy, content, ignore_dp, timeout, item])
 

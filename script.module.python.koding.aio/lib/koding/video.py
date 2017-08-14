@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 # script.module.python.koding.aio
 # Python Koding AIO (c) by whufclee (info@totalrevolution.tv)
@@ -64,16 +64,17 @@ if isplaying:
     xbmc.Player().stop()
 else:
     dialog.ok('PLAYBACK FAILED','Sorry, playback failed :(')
-~"""
-    if not os.path.exists(check_started):
-        os.makedirs(check_started)
-    
+~"""    
     if not ignore_dp:
         isdialog = True
         counter = 1
 
 # Check if the progress window is active and wait for playback
         while isdialog:
+            if xbmc.getCondVisibility('Window.IsActive(progressdialog)'):
+                if dp.iscanceled():
+                    dp.close()
+                    break
             dolog('### Current Window: %s' % xbmc.getInfoLabel('System.CurrentWindow'))
             dolog('### Current XML: %s' % xbmc.getInfoLabel('Window.Property(xmlfile)'))
             dolog('### Progress Dialog active, sleeping for %s seconds' % counter)
@@ -112,7 +113,7 @@ else:
 # If it's playing give it time to physically start streaming then attempt to pull some info
     if isplaying:
         xbmc.sleep(1000)
-        while not success and counter < 10:
+        while not success and counter < 5:
             try:
                 if xbmc.Player().isPlayingVideo():
                     infotag = xbmc.Player().getVideoInfoTag()
@@ -148,12 +149,133 @@ else:
     if not success:
         xbmc.executebuiltin('PlayerControl(Stop)')
         dolog('### Failed playback, stopped stream')
-        shutil.rmtree(check_started)
         return False
 
     else:
-        shutil.rmtree(check_started)
         return True
+#----------------------------------------------------------------    
+# TUTORIAL #
+def M3U_Selector(url,post_type='get',header='Stream Selection'):
+    """
+Send through an m3u/m3u8 playlist and have the contents displayed via a dialog select.
+The return will be a dictionary of 'name' and 'url'. You can send through either
+a locally stored filepath or an online URL.
+
+This function will try it's best to pull out the relevant playlist details even if the
+web page isn't a correctly formatted m3u playlist (e.g. an m3u playlist embedded into
+a blog page).
+
+CODE: M3U_Selector(url, [post_type, header])
+
+AVAILABLE PARAMS:
+    (*) url  -  The location of your m3u file, this can be local or online
+
+    post_type  -  If you need to use POST rather than a standard query string
+    in your url set this to 'post', by default it's set to 'get'.
+
+    header  -  This is the header you want to appear at the top of your dialog
+    selection window, by default it's set to "Stream Selection"
+
+EXAMPLE CODE:
+# This example uses YouTube plugin paths but any playable paths will work
+vid = koding.M3U_Selector(url='http://totalrevolution.tv/videos/playlists/youtube.m3u')
+
+# Make sure there is a valid link returned
+if vid:
+    playback = koding.Play_Video(video=vid['url'], showbusy=False)
+    if playback:
+        dialog.ok('SUCCESS!','Congratulations the playback was successful!')
+        xbmc.Player().stop()
+    else:
+        dialog.ok('OOPS!','Looks like something went wrong there, the playback failed. Check the links are still valid.')
+~"""
+    from web import Open_URL
+    from systemtools import Cleanup_String
+    from filetools import Text_File, Find_In_Text
+    success = False
+    if url.startswith('http'):
+        content = Open_URL(url=url, post_type=post_type, timeout=10)
+    else:
+        try:
+            url = xbmc.translatePath(url)
+        except:
+            pass
+        content = Text_File(url,'r')
+    if content:
+        newcontent = content.splitlines()
+        name_array = []
+        url_array  = []
+        name = ''
+        for line in newcontent:
+            line = line.strip()
+        # Grab the name of the stream
+            if line.startswith('#EXT'):
+                name = line.split(',')
+                name.pop(0)
+                name = ''.join(name)
+        # Grab the url(s) of the stream
+            if name != '' and line != '' and not line.startswith('#EXT'):
+                name_array.append(Cleanup_String(name))
+                line = line.replace('<br>','').replace('<br />','').replace('<br/>','')
+                line = line.replace('</p>','').replace('</div>','').replace('</class>','')
+                dolog('line: %s'%line)
+                if 'm3u' in line or 'm3u8' in line:
+                    line = 'LIST~'+line
+                if 'src="' in line:
+                    line = Find_In_Text(content=line, start='src="', end='"')[0]
+                url_array.append(line)
+                name = ''
+                line = ''
+        # If there is only one entry with no names/comments just return as unknown with the link
+            if not '#EXT' in content:
+                return {'name' : 'Unknown', 'url' : line}
+
+    # If there's a list we show a dialog select of the available links
+        if len(name_array) > 0:
+            choice = xbmcgui.Dialog().select(header, name_array)
+            if choice >= 0:
+
+            # If the selection is a final url and not a list of multiple links
+                if not url_array[choice].startswith('LIST~'):
+                    success = True
+                    return {'name' : name_array[choice], 'url' : url_array[choice]}
+
+            # List of multiple links detected, give option of which link to play
+                else:
+                    clean_link = url_array[choice].replace('LIST~','')
+                    content = Open_URL(url=clean_link, timeout=10)
+                    if content:
+                        newcontent = content.splitlines()
+                        name_array = []
+                        url_array  = []
+                        name = ''
+                        counter = 1
+                        for line in newcontent:
+                        # Show name as link 1,2,3,4 etc.
+                            if line.startswith('#EXT'):
+                                name = 'LINK '+str(counter)
+                        # Grab the link(s) to the video
+                            if name != '' and line != '' and not line.startswith('#EXT'):
+                                name_array.append(name)
+                                line = line.replace('<br>','').replace('<br />','').replace('<br/>','')
+                                line = line.replace('</p>','').replace('</div>','').replace('</class>','')
+                                url_array.append(line)
+                                name = ''
+                                line = ''
+                                counter += 1
+                        # If there is only one entry with no names/comments just return as unknown with the link
+                            if not '#EXT' in content:
+                                return {'name' : 'Unknown', 'url' : line}
+
+                    # Give option of which link to play in case of multiple links available
+                        if len(name_array) > 0:
+                            choice = xbmcgui.Dialog().select(header, name_array)
+                            if choice >= 0:
+                                success = True
+                                return {'name' : name_array[choice], 'url' : url_array[choice]}
+    if not success:
+        xbmcgui.Dialog().ok('NO LINKS FOUND','Sorry no valid links could be found for this stream.')
+        return False
 #----------------------------------------------------------------    
 # TUTORIAL #
 def Play_Video(video,showbusy=True,content='video',ignore_dp=False,timeout=10, item=None):
@@ -164,6 +286,11 @@ to Check_Playback but this actually tries a number of methods to
 play the video whereas Check_Playback does not actually try to
 play a video - it will just return True/False on whether or not
 a video is currently playing.
+
+If the video link sent through ends in m3u or m3u8 the links in that
+playlist will be shown in a dialog select window. Once the user clicks
+on the link they want the code will check for successful playback and
+return true or false.
 
 CODE: Play_Video(video, [showbusy, content, ignore_dp, timeout, item])
 
@@ -256,17 +383,7 @@ else:
         try:
             dolog('Attempting to play via xbmc.Player().play() method')
             xbmc.Player().play(video)
-            # dolog('Attempting to play via XBMC.ActivateWindow(10025, ...) method')
-            # xbmc.executebuiltin('XBMC.ActivateWindow(10025,%s)' % video)
             playback = Check_Playback(ignore_dp,timeout)
-            is_in_progress = True
-            progress_count = 0
-            while is_in_progress:
-                xbmc.sleep(1000)
-                progress_count += 1
-                dolog('Progress check is active, sleeping %s'%progress_count)
-                is_in_progress = os.path.exists(check_started)
-
         except:
             dolog(Last_Error())
 
@@ -276,14 +393,17 @@ else:
             dolog('Attempting to play via xbmc.executebuiltin method')
             xbmc.executebuiltin('%s'%video)
             playback = Check_Playback(ignore_dp,timeout)
-            is_in_progress = True
-            progress_count = 0
-            while is_in_progress:
-                xbmc.sleep(1000)
-                progress_count += 1
-                dolog('Progress check is active, sleeping %s'%progress_count)
-                is_in_progress = os.path.exists(check_started)
+        except:
+            dolog(Last_Error())
 
+    elif video.lower().endswith('m3u') or video.lower().endswith('m3u8'):
+        try:
+            xbmc.log('### Attempting to play link from m3u playlist',2)
+            dolog('Attempting to play link from m3u playlist')
+            video = M3U_Selector(video)
+            item.setInfo(type='Video', infoLabels={'title': video['name']})
+            xbmc.Player().play('%s'%video['url'],item)
+            playback = Check_Playback(ignore_dp,timeout)
         except:
             dolog(Last_Error())
 
@@ -293,13 +413,6 @@ else:
             dolog('Attempting to play via xbmc.Player.play() method')
             xbmc.Player().play('%s'%video, item)
             playback = Check_Playback(ignore_dp,timeout)
-            is_in_progress = True
-            progress_count = 0
-            while is_in_progress:
-                xbmc.sleep(1000)
-                progress_count += 1
-                dolog('Progress check is active, sleeping %s'%progress_count)
-                is_in_progress = os.path.exists(check_started)
 
 # Attempt to resolve via urlresolver
         except:
@@ -312,14 +425,6 @@ else:
                     dolog('### VALID URL, RESOLVED: %s'%video)
                 xbmc.Player().play('%s' % video, item)
                 playback = Check_Playback(ignore_dp,timeout)
-                is_in_progress = True
-                progress_count = 0
-                while is_in_progress:
-                    xbmc.sleep(1000)
-                    progress_count += 1
-                    dolog('Progress check is active, sleeping %s'%progress_count)
-                    is_in_progress = os.path.exists(check_started)
-
             except:
                 dolog(Last_Error())
 
@@ -329,14 +434,7 @@ else:
         command = ('{"jsonrpc": "2.0", "id":"1", "method": "Player.Open","params":{"item":{"channelid":%s}}}' % url)
         xbmc.executeJSONRPC(command)
         playback = Check_Playback(ignore_dp,timeout)
-        is_in_progress = True
-        progress_count = 0
-        while is_in_progress:
-            xbmc.sleep(1000)
-            progress_count += 1
-            dolog('Progress check is active, sleeping %s'%progress_count)
-            is_in_progress = os.path.exists(check_started)
-            
+
     else:
 # Attempt to resolve via urlresolver
         try:
@@ -348,13 +446,6 @@ else:
                 dolog('### VALID URL, RESOLVED: %s'%video)
             xbmc.Player().play('%s' % video, item)
             playback = Check_Playback(ignore_dp,timeout)
-            is_in_progress = True
-            progress_count = 0
-            while is_in_progress:
-                xbmc.sleep(1000)
-                progress_count += 1
-                dolog('Progress check is active, sleeping %s'%progress_count)
-                is_in_progress = os.path.exists(check_started)
 
 # Standard xbmc.player method
         except:
@@ -362,19 +453,21 @@ else:
                 dolog('Attempting to play via xbmc.Player.play() method')
                 xbmc.Player().play('%s' % video, item)
                 playback = Check_Playback(ignore_dp,timeout)
-                is_in_progress = True
-                progress_count = 0
-                while is_in_progress:
-                    xbmc.sleep(1000)
-                    progress_count += 1
-                    dolog('Progress check is active, sleeping %s'%progress_count)
-                    is_in_progress = os.path.exists(check_started)
-
             except:
                 dolog(Last_Error())
 
     dolog('Playback status: %s' % playback)
     Show_Busy(False)
+    counter = 1
+    dialogprogress = xbmc.getCondVisibility('Window.IsActive(progressdialog)')
+    while dialogprogress:
+        dp.create('Playback Good','Closing dialog...')
+        dolog('Attempting to close dp #%s'%counter)
+        dp.close()
+        xbmc.sleep(1000)
+        counter += 1
+        dialogprogress = xbmc.getCondVisibility('Window.IsActive(progressdialog)')
+
     return playback
 #----------------------------------------------------------------    
 # TUTORIAL #

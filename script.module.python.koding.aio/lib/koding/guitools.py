@@ -153,10 +153,11 @@ else:
         return True        
 #----------------------------------------------------------------    
 # TUTORIAL #
-def Custom_Dialog(pos='center',dialog='Text', size='700x500', button_width=200,\
+def Custom_Dialog(pos='center', dialog='Text', size='700x500', button_width=200,\
     header='Disclaimer', main_content='Add some text here', buttons=['Decline','Agree'],\
     header_color='gold', text_color='white', background='000000', transparency=100,\
-    highlight_color='blue'):
+    highlight_color='gold', button_color_focused='4e91cf', button_trans_focused=100,\
+    button_color_nonfocused='586381', button_trans_nonfocused=50):
     """
 A fully customisable dialog where you can have as many buttons as you want.
 Similar behaviour to the standard Kodi yesno dialog but this allows as many buttons
@@ -164,7 +165,8 @@ as you want, as much text as you want (with a slider) as well as fully configura
 sizing and positioning.
 
 CODE: Custom_Dialog([pos, dialog, size, button_width, header, main_content, buttons,\
-    header_color, text_color, background, transparency, highlight_color])
+    header_color, text_color, background, transparency, highlight_color, button_color_focused,\
+    button_trans_focused, button_color_nonfocused, button_trans_nonfocused])
 
 AVAILABLE PARAMS:
 
@@ -209,7 +211,19 @@ AVAILABLE PARAMS:
     transparency  -  Set the percentage of transparency as an integer. By default
     it's set to 100 which is a solid colour.
 
-    highlight_color  -  Set the highlighted text colour, by default it's 'blue'
+    highlight_color  -  Set the highlighted text colour, by default it's 'gold'
+
+    button_color_focused - Using the same format as background you can set the
+    colour to use for a button when it's focused.
+
+    button_trans_focused - Using the same format as transparency you can set the
+    transparency amount to use on the button when in focus.
+
+    button_color_nonfocused - Using the same format as background you can set the
+    colour to use for buttons when they are not in focus.
+
+    button_trans_nonfocused - Using the same format as transparency you can set the
+    transparency amount to use on the buttons when not in focus.
 
 EXAMPLE CODE:
 main_text = 'This is my main text.\n\nYou can add anything you want in here and the slider will allow you to see all the contents.\n\nThis example shows using a blue background colour and a transparency of 90%.\n\nWe have also changed the highlighted_color to yellow.'
@@ -227,9 +241,11 @@ dialog.ok('CUSTOM DIALOG 2','You selected option %s'%my_choice,'The value of thi
     ACTION      = -1
 # Convert the transparency percentage to hex
     transparency = float(transparency) / 100 * 255
-    xbmc.log('transparency: %s'%transparency,2)
     transparency = hex(int(transparency)).split('x')[1]
-    xbmc.log('transparency: %s'%transparency,2)
+    button_trans_focused = float(button_trans_focused) / 100 * 255
+    button_trans_focused = hex(int(button_trans_focused)).split('x')[1]
+    button_trans_nonfocused = float(button_trans_nonfocused) / 100 * 255
+    button_trans_nonfocused = hex(int(button_trans_nonfocused)).split('x')[1]
 
 # Work out the dialog dimensions
     if size == 'fullscreen':
@@ -319,8 +335,8 @@ dialog.ok('CUSTOM DIALOG 2','You selected option %s'%my_choice,'The value of thi
                 <width>%s</width>\n\
                 <height>40</height>\n\
                 <label>%s</label>\n\
-                <texturefocus border="20">list-focus.png</texturefocus>\n\
-                <texturenofocus border="20">list-nofocus.png</texturenofocus>\n\
+                <texturefocus colordiffuse="%s%s">DialogBack.png</texturefocus>\n\
+                <texturenofocus colordiffuse="%s%s">DialogBack.png</texturenofocus>\n\
                 <font>font12_title</font>\n\
                 <textcolor>%s</textcolor>\n\
                 <focusedcolor>%s</focusedcolor>\n\
@@ -330,7 +346,9 @@ dialog.ok('CUSTOM DIALOG 2','You selected option %s'%my_choice,'The value of thi
                 <onup>%s</onup>\n\
                 <ondown>%s</ondown>\n\
             </control>\n' % (button_num, button_x, button_y, button_width, buttons[counter-1],\
-                            text_color, highlight_color, button_num-1, button_num+1, onup, ondown)
+                            button_trans_focused, button_color_focused, button_trans_nonfocused,\
+                            button_color_nonfocused, text_color, highlight_color, button_num-1,\
+                            button_num+1, onup, ondown)
         button_num += 1
         counter    += 1
 

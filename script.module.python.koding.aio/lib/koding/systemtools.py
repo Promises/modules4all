@@ -26,7 +26,6 @@ import xbmcaddon
 import xbmcgui
 
 import filetools
-
 #----------------------------------------------------------------
 # TUTORIAL #
 def ASCII_Check(sourcefile=xbmc.translatePath('special://home'), dp=False):
@@ -108,8 +107,9 @@ dialog.ok('CLEAN', clean_text)
         pass
     
     my_string = urllib.unquote_plus(my_string)
+    my_string = my_string.replace('<br>','').replace('<br />','').replace('<br/>','')
+    my_string = my_string.replace('</p>','').replace('</div>','').replace('</class>','')
     my_string = my_string.replace('&amp;','&')
-    
     if len(my_string) > 4:
         if my_string[-4] == '.':
             my_string = my_string[:-4]
@@ -612,6 +612,77 @@ koding.Network_Settings()
 
     elif xbmc.getCondVisibility('System.Platform.Linux'):
         os.system('nm-connection-editor')
+#----------------------------------------------------------------
+# TUTORIAL #
+def Parse_XML(source, block, tags):
+    """
+Send through the contents of an XML file and pull out a list of matching
+items in the form of dictionaries. When checking your results you should
+allow for lists to be returned, by default each tag found in the xml will
+be returned as a string but if multiple entries of the same tag exists your
+dictionary item will be a list. Although this can be used for many uses this
+was predominantly added for support of XML's which contain multiple links to video
+files using things like <sublink>. When checking to see if a string or list has been
+returned you can use the Data_Type function from Koding which will return 'str' or 'list'.
+
+CODE: Parse_XML(source, block, tags)
+
+AVAILABLE PARAMS:
+
+    source  -  This is the original source file, this must already be read into
+    memory as a string so made sure you've either used Open_URL or Text_File to
+    read the contents before sending through.
+
+    block -  This is the master tag you want to use for creating a dictionary of items.
+    For example if you have an xml which contains multiple tags called <item> and you wanted
+    to create a dictionary of sub items found in each of these you would just use 'item'.
+
+    tags - This is a list of tags you want to return in your dictionary, so lets say each <item>
+    section contains <link>, <title> and <thumb> tags you can return a dictionary of all those
+    items by sending through ['link','title','thumb']
+
+EXAMPLE CODE:
+dialog.ok('DICTIONARY OF ITEMS','We will now attempt to return a list of details pulled from the noobsandnerds repository addon.xml (NaN repo needs to be installed for this to work).')
+xml_file = xbmc.translatePath('special://home/addons/repository.noobsandnerds/addon.xml')
+xml_file = koding.Text_File(xml_file,'r')
+repo_details = koding.Parse_XML(source=xml_file, block='dir', tags=['info','checksum','datadir'])
+counter = 0
+for item in repo_details:
+    dialog.ok( '[COLOR gold]REPO %s[/COLOR]'%(counter+1),'info path: %s\nchecksum path: %s\ndatadir: %s' % (repo_details[counter]['info'],repo_details[counter]['checksum'],repo_details[counter]['datadir']) )
+    counter += 1
+dialog.ok('[COLOR=dodgerblue]FINAL NOTICE[/COLOR]','You probably didn\'t notice but the details of the main noobsandnerds repo paths did NOT show, this is because they are not encapsulated in <dir> tags which we used as the \'block\' to check for.')
+~"""
+    from BeautifulSoup import BeautifulSoup
+    soup = BeautifulSoup(source)
+    my_return = []
+
+# Grab all the blocks of xml to search
+    for myblock in soup.findAll(block):
+        if myblock:
+            my_dict = {}
+            for tag in tags:
+                newsoup = BeautifulSoup(str(myblock))
+                newtag  = newsoup.findAll(tag)
+                if newtag:
+
+                # If only one instance is found we add to dict as a plain string
+                    if len(newtag)==1:
+                        newtag  = str(newtag).split(r'>')[1]
+                        newtag  = newtag.split(r'<')[0]
+                
+                # Otherwise we add to dict as a list
+                    else:
+                        tag_array = []
+                        for item in newtag:
+                            mynewtag  = str(item).split(r'>')[1]
+                            mynewtag  = mynewtag.split(r'<')[0]
+                            tag_array.append(mynewtag)
+                        newtag = tag_array
+                else:
+                    newtag = ''
+                my_dict[tag] = newtag
+            my_return.append(my_dict)
+    return my_return
 #----------------------------------------------------------------
 # TUTORIAL #
 def Refresh(r_mode=['addons', 'repos'], profile_name='default'):
