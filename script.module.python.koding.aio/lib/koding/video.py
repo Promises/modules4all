@@ -287,10 +287,8 @@ play the video whereas Check_Playback does not actually try to
 play a video - it will just return True/False on whether or not
 a video is currently playing.
 
-If the video link sent through ends in m3u or m3u8 the links in that
-playlist will be shown in a dialog select window. Once the user clicks
-on the link they want the code will check for successful playback and
-return true or false.
+If you have m3u or m3u8 playlist links please use the M3U_Selector
+function to get the final resolved url.
 
 CODE: Play_Video(video, [showbusy, content, ignore_dp, timeout, item])
 
@@ -392,17 +390,6 @@ else:
         try:
             dolog('Attempting to play via xbmc.executebuiltin method')
             xbmc.executebuiltin('%s'%video)
-            playback = Check_Playback(ignore_dp,timeout)
-        except:
-            dolog(Last_Error())
-
-    elif video.lower().endswith('m3u') or video.lower().endswith('m3u8'):
-        try:
-            xbmc.log('### Attempting to play link from m3u playlist',2)
-            dolog('Attempting to play link from m3u playlist')
-            video = M3U_Selector(video)
-            item.setInfo(type='Video', infoLabels={'title': video['name']})
-            xbmc.Player().play('%s'%video['url'],item)
             playback = Check_Playback(ignore_dp,timeout)
         except:
             dolog(Last_Error())
