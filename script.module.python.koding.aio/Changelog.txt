@@ -1,3 +1,6 @@
+v0.9.7.2
+- fix unquoting issue
+
 v.0.9.7.1:
 - Added Disable/Enable services to Addon_Toggle
 
@@ -113,7 +116,7 @@ v.0.9.3:
 - added reset_db function to use when running into threading error with sqlite
 - Added exceptions for built-in python libraries, no need to attempt enabling those
 - Fixed Main() commands which had broken due to cleaning of newlines and tabs
-- Fixed 
+- Fixed
 
 v.0.9.2:
 - Added Select_Dialog function to allow user to select from multiple values.
