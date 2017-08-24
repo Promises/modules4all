@@ -804,6 +804,8 @@ koding.Refresh('container')
     from database       import DB_Query
     from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Timestamp
 
+    xbmc.log('Disabling all services',2)
+    Addon_Service(mode='disable')
     kodi_ver        = int(float(xbmc.getInfoLabel("System.BuildVersion")[:2]))
     addons_db       = DB_Path_Check('addons')
     data_type       = Data_Type(addon)
@@ -900,6 +902,8 @@ koding.Refresh('container')
                     final_enabled.append(addon)
             except:
                 pass
+    xbmc.log('Enabling services',2)
+    Addon_Service(mode='enable')
     if refresh:
         Refresh(['addons','container'])
 #----------------------------------------------------------------
