@@ -58,7 +58,7 @@
 
 <addon id="script.module.python.koding.aio"
    name="Python Koding AIO"
-   version="0.9.6.9.9"
+   version="0.9.7.0"
    provider-name="Total Revolution, noobsandnerds">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
@@ -75,7 +75,7 @@
     <license>Creative Commons 4.0-NC-ND</license>
     <forum>http://noobsandnerds.com/support/showthread.php?tid=17614</forum>
     <website>http://totalrevolution.tv</website>
-    <news>Added new M3U_Selector function for playback of playlists</news>
+    <news>Added new Addon_Service funtion</news>
     <source>https://github.com/totalrevolution/totalrevolution/tree/master/script.module.python.koding.aio</source>
   </extension>
 </addon>

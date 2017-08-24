@@ -1,3 +1,7 @@
+v.0.9.7.0:
+- Added new Addon_Service funtion to show all addons running as service and also has the ability to disable/enable them. This only comments out the lines in the addon.xml, if they are already running as a service they will not be disabled until the next profile load. Similarly if enabled they will require a profile load for changes to take effect.
+- Fixed bug with Toggle_Addons - was trying to import a dependency from a path which no longer exists
+
 v.0.9.6.9.9:
 - Fixed bug with Addon_Genre not deleting old failed temp files
 

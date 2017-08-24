@@ -167,7 +167,7 @@ for item in enabled_list:
     my_return += '[COLOR=lime]ENABLED:[/COLOR] %s\n' % item
 for item in disabled_list:
     my_return += '[COLOR=red]DISABLED:[/COLOR] %s\n' % item
-Text_Box('ADDON STATUS',my_return)
+koding.Text_Box('ADDON STATUS',my_return)
 ~"""
     from database   import DB_Query
     from guitools   import Text_Box
@@ -196,6 +196,71 @@ Text_Box('ADDON STATUS',my_return)
         return enabled_list
     else:
         return disabled_list
+#----------------------------------------------------------------
+# TUTORIAL #
+def Addon_Service(addons='all', mode='list'):
+    """
+Send through an add-on id, list of id's or leave as the default which is "all". This
+will loop through the list of add-ons and return the ones which are run as services.
+
+This enable/disable feature will comment out the service lines, and does not stop a running
+service or start a service. This is designed more for if you've manually extracted a new
+add-on into your system and it isn't yet enabled. Occasionally if the add-ons have dependencies
+which are run as services then trying to enable them can cause Kodi to freeze.
+
+CODE: Addon_Service([addon,disable])
+
+AVAILABLE PARAMS:
+    
+    addons  -  By default this is set to "all" but if there's a sepcific set of add-ons you
+    want to disable the service for just send through the id's in the form of a list.
+
+    mode  -  By default this is set to 'list' meaning you'll get a return of add-on folders
+    which contain an instance of service in the add-on.xml. You can set this to "disable" to
+    comment out the instances of service and similarly when you need to re-enable you can use
+    "enable" and that will uncomment out the service item. Please note that by uncommenting
+    the service will not automatically start - you'll need to reload the profile for that.
+
+EXAMPLE CODE:
+dialog.ok('[COLOR gold]CHECKING FOR SERVICES[/COLOR]','We will now check for all add-ons installed which contain services')
+service_addons = Addon_Service(mode='list')
+my_text = 'List of add-ons running as a service:\n\n'
+for item in service_addons:
+    my_text += item+'\n'
+koding.Text_Box('[COLOR gold]SERVICE ADDONS[/COLOR]',my_text)
+~"""
+    from filetools   import Get_Contents, Text_File
+    from systemtools import Data_Type
+    from guitools    import Text_Box
+    service_addons = []
+    if addons=='all':
+        addons = Get_Contents(path=ADDONS, exclude_list=['packages','temp'],full_path=False)
+    else:
+        if Data_Type(addons) == 'str':
+            addons = [addons]
+    service_line = '<extension point="xbmc.service"'
+    
+    for item in addons:
+        addon_path = os.path.join(ADDONS,item,'addon.xml')
+        if os.path.exists(addon_path):
+            content = Text_File(addon_path,'r')
+            if service_line in content:
+                xbmc.log('%s contains a service,'%item,2)
+                for line in content.splitlines():
+                    if service_line in line:
+                        if item not in service_addons:
+                            service_addons.append(item)
+                            if not (line.strip().startswith('<!--')) and (mode == 'disable'):
+                                xbmc.log('Found service line - trying to disable...',2)
+                                replace_line = '<!--%s-->'%line
+                                Text_File(addon_path,'w',content.replace(line,replace_line))
+                                break
+                            elif line.strip().startswith('<!--') and mode == 'enable':
+                                xbmc.log('Found service line - trying to enable...',2)
+                                replace_line = line.replace(r'<!--','').replace(r'-->','')
+                                Text_File(addon_path,'w',content.replace(line,replace_line))
+                                break
+    return service_addons
 #----------------------------------------------------------------
 # TUTORIAL #
 def Addon_Setting(setting='',value='return_default',addon_id=''):
@@ -248,8 +313,7 @@ AVAILABLE PARAMS:
     disable  -  By default this is set to true so any add-ons in the list sent
     through will be disabled. Set to False if you want to enable the hidden add-ons.
 ~"""
-    from filetools   import Move_Tree
-    from systemtools import End_Path
+    from filetools   import Move_Tree, End_Path
 
     adult_store = xbmc.translatePath("special://profile/addon_data/script.module.python.koding.aio/adult_store")
     if not os.path.exists(adult_store):
@@ -692,12 +756,15 @@ def Toggle_Addons(addon='all', enable=True, safe_mode=True, exclude_list=[], new
 Send through either a list of add-on ids or one single add-on id.
 The add-ons sent through will then be added to the addons*.db
 and enabled or disabled (depending on state sent through).
+
 WARNING: If safe_mode is set to False this directly edits the
 addons*.db rather than using JSON-RPC. Although directly amending
 the db is a lot quicker there is no guarantee it won't cause
 severe problems in later versions of Kodi (this was created for v17).
 DO NOT set safe_mode to False unless you 100% understand the consequences!
+
 CODE:  Toggle_Addons([addon, enable, safe_mode, exclude_list, new_only, refresh])
+
 AVAILABLE PARAMS:
     (*) addon  -  This can be a list of addon ids, one single id or
     'all' to enable/disable all. If enabling all you can still use
@@ -719,6 +786,7 @@ AVAILABLE PARAMS:
     not affected.
     refresh  - By default this is set to True, it will refresh the
     current container and also force a local update on your add-ons db.
+
 EXAMPLE CODE:
 from systemtools import Refresh
 xbmc.executebuiltin('ActivateWindow(Videos, addons://sources/video/)')
@@ -834,138 +902,4 @@ koding.Refresh('container')
                 pass
     if refresh:
         Refresh(['addons','container'])
-
-# NEW CODE NOT WORKING
-#     from __init__       import dolog
-#     from filetools      import DB_Path_Check, Get_Contents
-#     from database       import DB_Query
-#     from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Timestamp
-#     from web            import Validate_Link
-
-#     addons_db       = DB_Path_Check('addons')
-#     data_type       = Data_Type(addon)
-#     state           = int(bool(enable))
-#     enabled_list    = []
-#     disabled_list   = []
-#     if kodi_ver >= 17:
-#         on_system   = DB_Query(addons_db,'SELECT addonID, enabled from installed')
-# # Create a list of enabled and disabled add-ons already on system
-#         enabled_list  = Addon_List(enabled=True)
-#         disabled_list = Addon_List(enabled=False)
-
-# # If addon has been sent through as a string we add into a list
-#     if data_type == 'unicode':
-#         addon = addon.encode('utf8')
-#         data_type = Data_Type(addon)
-
-#     if data_type == 'str' and addon!= 'all':
-#         addon = [addon,'']
-
-# # Grab all the add-on ids from addons folder
-#     if addon == 'all':
-#         addon     = []
-#         my_addons = Get_Contents(path=ADDONS, exclude_list=['packages','temp'])
-#         for item in my_addons:
-#             addon_id = Get_Addon_ID(item)
-#             addon.append(addon_id)
-
-# # Find out what is and isn't enabled in the addons*.db
-#     temp_list = []
-#     for addon_id in addon:
-#         if not addon_id in exclude_list and addon_id != '':
-#             dolog('CHECKING: %s'%addon_id)
-
-# # Check ALL addons and not just newly extracted not yet in db
-#             if addon_id in disabled_list and not new_only and enable:
-#                 dolog('[1] Adding to temp list: %s'%addon_id)
-#                 temp_list.append(addon_id)
-
-# # Check addons not in our disabled list and also aren't in the enabled list
-#             elif addon_id not in disabled_list and addon_id not in enabled_list:
-#                 dolog('[2] Adding to temp list: %s'%addon_id)
-#                 temp_list.append(addon_id)
-
-# # Check addons that are already enabled, get ready to disable
-#             elif addon_id in enabled_list and not enable:
-#                 dolog('[3] Adding to temp list: %s'%addon_id)
-#                 temp_list.append(addon_id)
-
-# # Check addons which are disabled get ready to enable (same as first if function??)
-#             elif addon_id in disabled_list and enable:
-#                 dolog('[4] Adding to temp list: %s'%addon_id)
-#                 temp_list.append(addon_id)
-#     addon = temp_list
-
-# # If you want to bypass the JSON-RPC mode and directly modify the db (READ WARNING ABOVE!!!)
-#     if not safe_mode and kodi_ver >= 17:
-#         installedtime   = Timestamp('date_time')
-#         insert_query    = 'INSERT or IGNORE into installed (addonID , enabled, installDate) VALUES (?,?,?)'
-#         update_query    = 'UPDATE installed SET enabled = ? WHERE addonID = ? '
-#         insert_values   = [addon, state, installedtime]
-#         try:
-#             for item in addon:
-#                 DB_Query(addons_db, insert_query, [item, state, installedtime])
-#                 DB_Query(addons_db, update_query, [state, item])
-#         except:
-#             dolog(Last_Error())
-#         if refresh:
-#             Refresh()
-
-# # Using the safe_mode (JSON-RPC)
-#     else:
-#         Refresh('addons')
-#         xbmc.sleep(1000)
-#         final_enabled = []
-#         if state:
-#             my_value = 'true'
-#             log_value = 'ENABLED'
-#         else:
-#             my_value = 'false'
-#             log_value = 'DISABLED'
-
-#         for my_addon in addon:
-
-# # If enabling the add-on then we also check for dependencies and enable them first
-#             if state:
-#                 dolog('Checking dependencies for : %s'%my_addon)
-#                 dependencies = Dependency_Check(addon_id=my_addon, recursive=True)
-#                 dolog('Dependencies: %s'%dependencies)
-
-# # traverse through the dependencies in reverse order attempting to enable
-#                 for item in reversed(dependencies):
-#                     if not item in exclude_list and not item in final_enabled and not item in enabled_list:
-#                         dolog('Attempting to enable: %s'%item)
-#                         addon_set = Set_Setting(setting_type='addon_enable', setting=item, value = 'true')
-
-# # If we've successfully enabled then we add to list so we can skip any other instances
-#                         if addon_set:
-#                             dolog('%s now %s' % (my_addon, log_value))
-#                             final_enabled.append(item)
-
-# # Now the dependencies are enabled we need to enable the actual main add-on
-#         bad_repo = []
-#         for my_addon in addon:
-#             if not my_addon in final_enabled:
-#                 ok = True
-#                 addon_set = True
-#                 if 'repo' in my_addon:
-#                     ok = Check_Repo(my_addon)
-#                     if not ok:
-#                         dolog('BAD REPO: %s IS NOT RESOLVING SO WE ARE NOT INSTALLING'%my_addon)
-#                         addon_set = False
-#                 if addon_set:
-#                     addon_set = Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value)
-#                 if addon_set:
-#                     dolog('%s now %s' % (my_addon, log_value))
-#                     final_enabled.append(addon)
-#                 else:
-#                     bad_repo.append(my_addon)
-#         if len(bad_repo) > 0:
-#             final_list = 'The following repostitories are not resolving so have not been installed: '
-#             for item in bad_repo:
-#                 final_list += item+','
-#             final_list = final_list[:-1]
-#             dialog.ok('[COLOR=gold]BAD REPOSITORIES FOUND[/COLOR]',final_list)
-#     if refresh:
-#         Refresh('container')
-# ----------------------------------------------------------------
+#----------------------------------------------------------------
