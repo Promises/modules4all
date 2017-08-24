@@ -1,3 +1,6 @@
+v.0.9.6.9.9:
+- Fixed bug with Addon_Genre not deleting old failed temp files
+
 v.0.9.6.9.8:
 - Fixed bug with dependency check, wasn't showing all recursive deps
 

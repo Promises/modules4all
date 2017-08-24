@@ -96,6 +96,7 @@ if comedy_addons:
             addon_list = eval( Text_File(final_path, 'r') )
             return addon_list[genre]
         except:
+            os.remove(final_path)
             return False
     else:
         return False

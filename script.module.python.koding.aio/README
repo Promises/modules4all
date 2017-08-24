@@ -724,7 +724,7 @@ This will allow the user to browse to a specific file and return the path.
 
 IMPORTANT: Do not confuse this with the Browse_To_Folder function
 
-	CODE: koding.Browse_To_File([header, path, extension])
+	CODE: Browse_To_File([header, path, extension])
 
 	AVAILABLE PARAMS:
 	    header    -  As the name suggests this is a string to be used for the header/title
@@ -748,7 +748,7 @@ and the path is then returned.
 
 IMPORTANT: Do not confuse this with the Browse_To_File function
 
-	CODE: koding.Browse_To_Folder(header, path)
+	CODE: Browse_To_Folder(header, path)
 
 	AVAILABLE PARAMS:
 	    header  -  As the name suggests this is a string to be used for the header/title
@@ -911,7 +911,7 @@ This will show/hide a "working" symbol.
 KEYBOARD:
 Show an on-screen keyboard and return the string
 
-	CODE: koding.Keyboard([default, heading, hidden, return_false, autoclose, kb_type])
+	CODE: Keyboard([default, heading, hidden, return_false, autoclose, kb_type])
 
 	AVAILABLE PARAMS:
 
@@ -966,7 +966,7 @@ Show an on-screen keyboard and return the string
 NOTIFICATION POPUP:
 Show a short notification for x amount of seconds
 
-	CODE: koding.Notify(title, message, [duration, icon])
+	CODE: Notify(title, message, [duration, icon])
 
 	AVAILABLE PARAMS:
 
@@ -1028,7 +1028,7 @@ sent through as a list and only one can be selected - this is not a multi-select
 TEXT BOX (LARGE WINDOW OF TEXT):
 This will allow you to open a blank window and fill it with some text.
 
-	CODE: koding.Text_Box(header, message)
+	CODE: Text_Box(header, message)
 
 	AVAILABLE PARAMS:
 		header 	-  As the name suggests this is a string to be used for the header/title of the window
@@ -1388,7 +1388,7 @@ few seconds. If using a cheap poor quality device (like many android units)
 then you could even end up killing the device as some of them are made
 with very poor components which are liable to irreversable corruption.
 
-	CODE: koding.Dummy_File(dest, [size, size_format])
+	CODE: Dummy_File(dest, [size, size_format])
 
 	AVAILABLE PARAMS:
 
@@ -1524,7 +1524,7 @@ any folders/files you don't want removed.
 EXTRACT:
 This function extract a zip or tar file and return true or false so unlike the builtin xbmc function "Extract" this one will pause code until it's completed the action.
 
-	CODE: koding.Extract(src,dst,[dp])
+	CODE: Extract(src,dst,[dp])
 	dp is optional, by default it is set to false
 
 	AVAILABLE PARAMS:
@@ -1588,7 +1588,7 @@ perform a hard reset and on Android it will wipe the data for the current runnin
 FOLDER SIZE:
 Return the size of a folder path including sub-directories, this can be returned in a number of different formats.
 
-	CODE: koding.Folder_Size([dirname, filesize])
+	CODE: Folder_Size([dirname, filesize])
 
 	AVAILABLE PARAMS:
 
@@ -1680,7 +1680,7 @@ Move a directory including all sub-directories to a new location.
 This will automatically create the new location if it doesn't already
 exist and it wierwrite any existing entries if they exist.
 
-CODE: koding.Move_Tree(src, dst)
+CODE: Move_Tree(src, dst)
 
 AVAILABLE PARAMS:
 
@@ -1710,7 +1710,7 @@ If you need to find out the current "real" database in use then this is the func
 READ/WRITE TEXT FILES:
 Open/create a text file and read/write to it.
 
-	CODE: koding.Text_File(path, mode, [text])
+	CODE: Text_File(path, mode, [text])
 
 	AVAILABLE PARAMS:    
 	    (*) path  -  This is the path to the text file
@@ -1931,7 +1931,7 @@ distros so if you know of any improved code please do pass on. Thank you.
 PRINT TO LOG - DEBUG MODE:
 Print to the Kodi log but only if debugging is enabled in settings.xml
 
-	CODE: koding.dolog(string)
+	CODE: dolog(string)
 	string is your text you want printed to log.
 
 	EXAMPLE CODE:
@@ -1945,7 +1945,7 @@ Refresh a number of items in kodi, choose the order they are executed in by putt
 For example if you want to refresh addons then repo and then the profile you would send through a list in
 the order you want them to be executed.
 
-	CODE: koding.Refresh(r_mode, [profile])
+	CODE: Refresh(r_mode, [profile])
 
 	AVAILABLE PARAMS:
 
@@ -2014,7 +2014,7 @@ Return the Kodi app name you're running, useful for fork compatibility
 SLEEP IF FUNCTION ACTIVE:
 This will allow you to pause code while a specific function is running in the background.
 
-	CODE: koding.Sleep_If_Function_Active(function, args, kill_time, show_busy)
+	CODE: Sleep_If_Function_Active(function, args, kill_time, show_busy)
 
 	AVAILABLE PARAMS:
 
@@ -2269,7 +2269,7 @@ FIND IN TEXT:
 Regex through some text and return a list of matches. Please note this will return a LIST so even if
 only one item is found you will still need to access it as a list, see example below.
 
-	CODE: koding.Find_In_Text(content, start, end, [show_errors])
+	CODE: Find_In_Text(content, start, end, [show_errors])
 
 	AVAILABLE PARAMS:
 	    
@@ -2471,7 +2471,7 @@ specific items in your new list.
 SPLIT STRING INTO LINES OF X AMOUNT OF CHARACTERS:
 Splits up a piece of text into a list of lines x amount of chars in length.
 
-	CODE: koding.Split_Lines(raw_string, size)
+	CODE: Split_Lines(raw_string, size)
 
 	AVAILABLE PARAMS:
 
