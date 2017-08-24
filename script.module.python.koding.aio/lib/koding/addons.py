@@ -36,13 +36,6 @@ dialog      = xbmcgui.Dialog()
 # TUTORIAL #
 def Addon_Genre(genre='adult',custom_url=''):
     """
-[COLOR=gold]PREMIUM FEATURE FOR ADDONS EXCLUSIVELY SUPPORTED AT NOOBSANDNERDS[/COLOR]
-If you'd like to hook into this please take a look at the README.
-
-Please Note: Although this hooks into the NaN framework to pull genres you can use this without
-having to hook into their framework if you have a custom url which returns results in the same format.
-Your url must return a dictionary of items in this format: {"addon_name":"addon_id","addon_name_2":"addon_id_2"}
-
 Return a dictionary of add-ons which match a specific genre.
 
 CODE: Addon_Genre([genre, custom_url])
@@ -50,37 +43,35 @@ CODE: Addon_Genre([genre, custom_url])
 AVAILABLE PARAMS:
     
     genre  -  By default this is set to 'adult' which will return
-    a dictionary of all known adult add-ons. For a full list of all
-    the available genres you can filter by take a look at the Add-on Portal
-    link below. If you click on each of the genre links then look at the
-    url you'll be able to see the name to use. For example if you click on
-    "Dev Tools" you'll see the url shows as 'devtools' and that's what you'd
-    send through to this function if you only wanted those to show.
-    http://noobsandnerds.com/addons/category/genres/
+    a dictionary of all known adult add-ons. The genre details are pulled from the
+    Add-on Portal at noobsandnerds.com so you can use any of the supported genre tags
+    listed on this page: http://noobsandnerds.com/latest/?p=3762
 
-    custom_url  -  If you have your own custom url which returns genres
-    you can enter it here and use that rather than rely on NaN categorisation.
+    custom_url  -  If you have your own custom url which returns a dictionary
+    of genres you can enter it here and use that rather than rely on NaN categorisation.
 
 EXAMPLE CODE:
-space_addons = koding.Addon_Genre(genre='space')
-if space_addons:
-    my_return = 'LIST OF AVAILABLE SPACE BASED ADD-ONS:\n\n'
+dialog.ok('[COLOR gold]ADD-ON GENRES[/COLOR]','We will now list all known comedy based add-ons. If you have add-ons installed which you feel should be categorised as supplying comedy but they aren\'t then you can help tag them up correctly via the Add-on Portal at NaN.')
+comedy_addons = koding.Addon_Genre(genre='comedy')
+if comedy_addons:
+    my_return = 'LIST OF AVAILABLE COMEDY BASED ADD-ONS:\n\n'
 
 # Convert the dictionary into a list:
-    space_addons = space_addons.items()
-    for item in space_addons:
+    comedy_addons = comedy_addons.items()
+    for item in comedy_addons:
         my_return += '[COLOR=gold]Name:[/COLOR] %s   |   [COLOR=dodgerblue]ID:[/COLOR] %s\n' % (item[0],item[1])
-    koding.Text_Box('SPACE ADD-ONS',my_return)
+    koding.Text_Box('[COLOR gold]COMEDY ADD-ONS[/COLOR]',my_return)
 ~"""
     import binascii
-    from __init__       import Main
+    from __init__       import converthex
     from filetools      import Text_File
     from systemtools    import Timestamp
     from web            import Open_URL
     
-    local_path  = binascii.hexlify(genre)
-    cookie_path = xbmc.translatePath("special://profile/addon_data/script.module.python.koding.aio/cookies/")
-    final_path  = os.path.join(cookie_path,local_path)
+    download_new = True
+    local_path   = binascii.hexlify('addons')
+    cookie_path  = xbmc.translatePath("special://profile/addon_data/script.module.python.koding.aio/cookies/")
+    final_path   = os.path.join(cookie_path,local_path)
     if not os.path.exists(cookie_path):
         os.makedirs(cookie_path)
 
@@ -89,33 +80,21 @@ if space_addons:
         old = int(modified)
         now = int(Timestamp('epoch'))
 # Add a 24hr wait so we don't kill server
-        if now > (modified+86400):
-            if custom_url == '':
-                Main('addon_list|g:%s'%genre)
-            else:
-                addon_list = Open_URL(custom_url)
-                try:
-                    addon_list = eval(addon_list)
-                    Text_File(final_path,"w",binascii.hexlify(str(addon_list)) )
-                except:
-                    pass
+        if now < (modified+86400):
+            download_new = False
 
-# Create new file if it doesn't exist
-    else:
+# Create new file
+    if download_new:
         if custom_url == '':
-            Main('addon_list|g:%s'%genre)
-        else:
-            addon_list = Open_URL(custom_url)
-            try:
-                addon_list = eval(addon_list)
-                Text_File(final_path,"w",binascii.hexlify(str(addon_list)) )
-            except:
-                pass
+            custom_url = converthex('687474703a2f2f6e6f6f6273616e646e657264732e636f6d2f6164646f6e732f6164646f6e5f6c6973742e747874')
+        addon_list = Open_URL(custom_url)
+        Text_File(final_path, "w", addon_list)
 
+# Grab details of the relevant genre
     if os.path.exists(final_path):
         try:
-            addon_list = eval(binascii.unhexlify(Text_File(final_path, 'r')))
-            return addon_list
+            addon_list = eval( Text_File(final_path, 'r') )
+            return addon_list[genre]
         except:
             return False
     else:
@@ -565,8 +544,8 @@ koding.Text_Box('Modules required for %s'%current_id,clean_text)
                 except:
                     dep_path = os.path.join(ADDONS,item)
 
-            if dep_path:
-                depfiles = Check_Deps(dep_path)
+                if dep_path:
+                    depfiles = Check_Deps(dep_path)
 
     return depfiles
 #----------------------------------------------------------------
@@ -689,7 +668,8 @@ else:
     dialog.ok('YOUTUBE NOT INSTALLED','We cannot run this example as it uses the YouTube add-on which has not been found on your system.')
 ~"""
     import xbmcaddon
-    addon_id = Caller()
+    if addon_id == '':
+        addon_id = Caller()
     xbmc.log('ADDON ID: %s'%addon_id,2)
     xbmc.executebuiltin('Addon.OpenSettings(%s)' % addon_id)
     if focus != '':

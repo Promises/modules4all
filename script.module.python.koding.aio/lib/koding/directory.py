@@ -123,6 +123,7 @@ Add_Dir(name='TEST ITEM', url='', mode='test_item', folder=False, context_items=
 ~"""
     from __init__       import dolog
     from systemtools    import Data_Type
+    from vartools       import Convert_Special
 
     module_id   =  'script.module.python.koding.aio'
     this_module =  xbmcaddon.Addon(id=module_id)
@@ -204,7 +205,7 @@ Add_Dir(name='TEST ITEM', url='', mode='test_item', folder=False, context_items=
 
     u   = sys.argv[0]
     u += "?mode="           +str(mode)
-    u += "&url="            +urllib.quote_plus(url)
+    u += "&url="            +Convert_Special(url,string=True)
     u += "&name="           +urllib.quote_plus(name)
     u += "&iconimage="      +urllib.quote_plus(icon)
     u += "&fanart="         +urllib.quote_plus(fanart)
@@ -327,8 +328,7 @@ koding.Populate_List(url=link, start_point=sp, end_point=ep, separator=sep)
     import re
     import urlparse
     from __init__       import dolog
-    from filetools      import Find_In_Text
-    from systemtools    import Cleanup_String
+    from vartools       import Find_In_Text, Cleanup_String
     from video          import Play_Video
     from web            import Open_URL, Get_Extension, Cleanup_URL
 

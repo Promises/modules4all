@@ -450,16 +450,17 @@ dialog.ok('IP RETURNED','You typed in:', '', '[COLOR=dodgerblue]%s[/COLOR]'%myte
 mytext = koding.Keyboard(heading='Password',kb_type='password')
 dialog.ok('MD5 RETURN','The md5 for this password is:', '', '[COLOR=dodgerblue]%s[/COLOR]'%mytext)
 ~"""
+    from vartools import Decode_String
     kb_type = eval( 'xbmcgui.INPUT_%s'%kb_type.upper() )
     if hidden:
         hidden = eval( 'xbmcgui.%s_HIDE_INPUT'%kb_type.upper() )
     keyboard = dialog.input(heading,default,kb_type,hidden,autoclose)
 
     if keyboard != '':
-        return unicode(keyboard, "utf-8")
+        return keyboard
     
     elif not return_false:
-        return default
+        return Decode_String(default)
     
     else:
         return False
