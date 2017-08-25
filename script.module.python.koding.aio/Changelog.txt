@@ -1,5 +1,10 @@
-v0.9.7.2
-- fix unquoting issue
+v.0.9.7.3:
+- Another bug fix for routing unquoting issue
+- Added ability to pass through a skip_list in Addon_Service
+- Removed service toggle in Addon_Toggle, was causing problems
+
+v.0.9.7.2:
+- fix unquoting issue (midraal)
 
 v.0.9.7.1:
 - Added Disable/Enable services to Addon_Toggle

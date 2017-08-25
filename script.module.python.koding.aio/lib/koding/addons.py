@@ -198,7 +198,7 @@ koding.Text_Box('ADDON STATUS',my_return)
         return disabled_list
 #----------------------------------------------------------------
 # TUTORIAL #
-def Addon_Service(addons='all', mode='list'):
+def Addon_Service(addons='all', mode='list', skip_service='all'):
     """
 Send through an add-on id, list of id's or leave as the default which is "all". This
 will loop through the list of add-ons and return the ones which are run as services.
@@ -221,6 +221,13 @@ AVAILABLE PARAMS:
     "enable" and that will uncomment out the service item. Please note that by uncommenting
     the service will not automatically start - you'll need to reload the profile for that.
 
+    skip_service  -  This function can fail if certain dependencies are
+    run as a service, if they are causing problems you can send through
+    the id or a list of id's which you want to disable the service for.
+    This will comment out the service part in the addon.xml before attempting
+    to enable the add-on. Don't forget to re-enable this if you want the service
+    running.
+
 EXAMPLE CODE:
 dialog.ok('[COLOR gold]CHECKING FOR SERVICES[/COLOR]','We will now check for all add-ons installed which contain services')
 service_addons = Addon_Service(mode='list')
@@ -238,11 +245,18 @@ koding.Text_Box('[COLOR gold]SERVICE ADDONS[/COLOR]',my_text)
     else:
         if Data_Type(addons) == 'str':
             addons = [addons]
+
+    if skip_service=='all':
+        skip_service = addons
+    else:
+        if Data_Type(skip_service) == 'str':
+            skip_service = [skip_service]
+
     service_line = '<extension point="xbmc.service"'
     
     for item in addons:
         addon_path = os.path.join(ADDONS,item,'addon.xml')
-        if os.path.exists(addon_path):
+        if os.path.exists(addon_path) and item not in skip_service:
             content = Text_File(addon_path,'r')
             if service_line in content:
                 xbmc.log('%s contains a service,'%item,2)
@@ -771,6 +785,7 @@ AVAILABLE PARAMS:
     the exclude_list for any you want excluded from this function.
     enable  -  By default this is set to True, if you want to disable
     the add-on(s) then set this to False.
+    
     safe_mode  -  By default this is set to True which means the add-ons
     are enabled/disabled via JSON-RPC which is the method recommended by
     the XBMC foundation. Setting this to False will result in a much
@@ -778,12 +793,15 @@ AVAILABLE PARAMS:
     versions of Kodi and it may even cause corruption in future versions.
     Setting to False is NOT recommended and you should ONLY use this if
     you 100% understand the risks that you could break multiple setups.
+    
     exclude_list  -  Send through a list of any add-on id's you do not
     want to be included in this command.
+    
     new_only  -  By default this is set to True so only newly extracted
     add-on folders will be enabled/disabled. This means that any existing
     add-ons which have deliberately been disabled by the end user are
     not affected.
+    
     refresh  - By default this is set to True, it will refresh the
     current container and also force a local update on your add-ons db.
 
@@ -802,10 +820,8 @@ koding.Refresh('container')
     from __init__       import dolog
     from filetools      import DB_Path_Check, Get_Contents
     from database       import DB_Query
-    from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Timestamp
+    from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Sleep_If_Function_Active, Timestamp
 
-    xbmc.log('Disabling all services',2)
-    Addon_Service(mode='disable')
     kodi_ver        = int(float(xbmc.getInfoLabel("System.BuildVersion")[:2]))
     addons_db       = DB_Path_Check('addons')
     data_type       = Data_Type(addon)
@@ -880,7 +896,7 @@ koding.Refresh('container')
 # If enabling the add-on then we also check for dependencies and enable them first
             if state:
                 dolog('Checking dependencies for : %s'%my_addon)
-                dependencies = Dependency_Check(addon_id=my_addon, recursive=True)
+                dependencies = Dependency_Check(addon_id=my_addon, recursive=False)
 
 # traverse through the dependencies in reverse order attempting to enable
                 for item in reversed(dependencies):
@@ -902,8 +918,6 @@ koding.Refresh('container')
                     final_enabled.append(addon)
             except:
                 pass
-    xbmc.log('Enabling services',2)
-    Addon_Service(mode='enable')
     if refresh:
         Refresh(['addons','container'])
 #----------------------------------------------------------------

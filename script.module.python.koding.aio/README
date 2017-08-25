@@ -136,7 +136,7 @@ service or start a service. This is designed more for if you've manually extract
 add-on into your system and it isn't yet enabled. Occasionally if the add-ons have dependencies
 which are run as services then trying to enable them can cause Kodi to freeze.
 
-	CODE: Addon_Service([addon,disable])
+	CODE: Addon_Service([addon, disable, skip_service])
 
 	AVAILABLE PARAMS:
 	    
@@ -148,6 +148,13 @@ which are run as services then trying to enable them can cause Kodi to freeze.
 	    comment out the instances of service and similarly when you need to re-enable you can use
 	    "enable" and that will uncomment out the service item. Please note that by uncommenting
 	    the service will not automatically start - you'll need to reload the profile for that.
+
+	    skip_service  -  This function can fail if certain dependencies are
+	    run as a service, if they are causing problems you can send through
+	    the id or a list of id's which you want to disable the service for.
+	    This will comment out the service part in the addon.xml before attempting
+	    to enable the add-on. Don't forget to re-enable this if you want the service
+	    running.
 
 	EXAMPLE CODE:
 		dialog.ok('[COLOR gold]CHECKING FOR SERVICES[/COLOR]','We will now check for all add-ons installed which contain services')
@@ -215,6 +222,59 @@ By default this will open the current add-on settings but if you pass through an
 		    koding.Open_Settings(addon_id='plugin.video.youtube',focus='2.3',click=True,stop_script=True)
 		else:
 		    dialog.ok('YOUTUBE NOT INSTALLED','We cannot run this example as it uses the YouTube add-on which has not been found on your system.')
+
+------------------------------------------------------------------------------------------
+
+ADDON TOGGLE:
+Send through either a list of add-on ids or one single add-on id.
+The add-ons sent through will then be added to the addons*.db
+and enabled or disabled (depending on state sent through).
+
+WARNING: If safe_mode is set to False this directly edits the
+addons*.db rather than using JSON-RPC. Although directly amending
+the db is a lot quicker there is no guarantee it won't cause
+severe problems in later versions of Kodi (this was created for v17).
+DO NOT set safe_mode to False unless you 100% understand the consequences!
+
+	CODE:  Toggle_Addons([addon, enable, safe_mode, exclude_list, new_only, refresh])
+
+	AVAILABLE PARAMS:
+	    (*) addon  -  This can be a list of addon ids, one single id or
+	    'all' to enable/disable all. If enabling all you can still use
+	    the exclude_list for any you want excluded from this function.
+	    enable  -  By default this is set to True, if you want to disable
+	    the add-on(s) then set this to False.
+	    
+	    safe_mode  -  By default this is set to True which means the add-ons
+	    are enabled/disabled via JSON-RPC which is the method recommended by
+	    the XBMC foundation. Setting this to False will result in a much
+	    quicker function BUT there is no guarantee this will work on future
+	    versions of Kodi and it may even cause corruption in future versions.
+	    Setting to False is NOT recommended and you should ONLY use this if
+	    you 100% understand the risks that you could break multiple setups.
+	    
+	    exclude_list  -  Send through a list of any add-on id's you do not
+	    want to be included in this command.
+	    
+	    new_only  -  By default this is set to True so only newly extracted
+	    add-on folders will be enabled/disabled. This means that any existing
+	    add-ons which have deliberately been disabled by the end user are
+	    not affected.
+	    
+	    refresh  - By default this is set to True, it will refresh the
+	    current container and also force a local update on your add-ons db.
+
+	EXAMPLE CODE:
+		from systemtools import Refresh
+		xbmc.executebuiltin('ActivateWindow(Videos, addons://sources/video/)')
+		xbmc.sleep(2000)
+		dialog.ok('DISABLE YOUTUBE','We will now disable YouTube (if installed)')
+		koding.Toggle_Addons(addon='plugin.video.youtube', enable=False, safe_mode=True, exclude_list=[], new_only=False)
+		koding.Refresh('container')
+		xbmc.sleep(2000)
+		dialog.ok('ENABLE YOUTUBE','When you click OK we will enable YouTube (if installed)')
+		koding.Toggle_Addons(addon='plugin.video.youtube', enable=True, safe_mode=True, exclude_list=[], new_only=False)
+		koding.Refresh('container')
 
 ------------------------------------------------------------------------------------------
 
