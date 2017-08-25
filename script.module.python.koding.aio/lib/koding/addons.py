@@ -265,12 +265,10 @@ koding.Text_Box('[COLOR gold]SERVICE ADDONS[/COLOR]',my_text)
                         if item not in service_addons:
                             service_addons.append(item)
                             if not (line.strip().startswith('<!--')) and (mode == 'disable'):
-                                xbmc.log('Found service line - trying to disable...',2)
                                 replace_line = '<!--%s-->'%line
                                 Text_File(addon_path,'w',content.replace(line,replace_line))
                                 break
                             elif line.strip().startswith('<!--') and mode == 'enable':
-                                xbmc.log('Found service line - trying to enable...',2)
                                 replace_line = line.replace(r'<!--','').replace(r'-->','')
                                 Text_File(addon_path,'w',content.replace(line,replace_line))
                                 break
@@ -432,15 +430,16 @@ koding.Text_Box('ADD-ON LIST', path_list)
 def Check_Deps(addon_path, depfiles = []):
     import re
     from filetools import Text_File
-    exclude_list = ['xbmc.gui','script.module.metahandler','kodi.resource','xbmc.core','xbmc.metadata','xbmc.addon','xbmc.json','xbmc.python']
-    try:
-        readxml = Text_File(os.path.join(addon_path,'addon.xml'),'r')
+    from __init__  import dolog
+    exclude_list  = ['xbmc.gui', 'script.module.metahandler', 'metadata.common.allmusic.com',\
+                    'kodi.resource','xbmc.core','xbmc.metadata','xbmc.addon','xbmc.json','xbmc.python']
+    file_location = os.path.join(addon_path,'addon.xml')
+    if os.path.exists(file_location):
+        readxml = Text_File(file_location,'r')
         dmatch   = re.compile('import addon="(.+?)"').findall(readxml)
         for requires in dmatch:
             if not requires in exclude_list and not requires in depfiles:
                 depfiles.append(requires)
-    except:
-        pass
     return depfiles
 #----------------------------------------------------------------
 # TUTORIAL #
@@ -572,7 +571,8 @@ else:
 def Dependency_Check(addon_id = 'all', recursive = False):
     """
 This will return a list of all dependencies required by an add-on.
-This information is grabbed directly from the currently installed addon.xml for that id.
+This information is grabbed directly from the currently installed addon.xml,
+an individual add-on id or a list of add-on id's.
 
 CODE:  Dependency_Check([addon_id, recursive])
 
@@ -596,37 +596,50 @@ koding.Text_Box('Modules required for %s'%current_id,clean_text)
 ~"""
     import xbmcaddon
     import re
-    from filetools import Text_File
-    depfiles     = []
-
+    from filetools      import Text_File
+    from systemtools    import Data_Type 
+    
+    processed    = []
+    depfiles     = []    
+    
     if addon_id == 'all':
-        for name in os.listdir(ADDONS):
-            if name != 'packages' and name != 'temp':
-                try:
-                    addon_path = os.path.join(ADDONS,name)
-                    depfiles = Check_Deps(addon_path)
-                except:
-                    pass
-    else:
+        addon_id = os.listdir(ADDONS)
+    elif Data_Type(addon_id) == 'str':
+        addon_id = [addon_id]
+
+    for name in addon_id:
         try:
-            addon_path = xbmcaddon.Addon(id=addon_id).getAddonInfo('path')
+            addon_path = xbmcaddon.Addon(id=name).getAddonInfo('path')
         except:
-            addon_path = os.path.join(ADDONS,addon_id)
+            addon_path = os.path.join(ADDONS, name)
+        if not name in processed:
+            processed.append(name)
 
-        depfiles = Check_Deps(addon_path)
-
+    # Get list of master dependencies
+        depfiles = Check_Deps(addon_path,[name])
+        
+    # Recursively check all other dependencies
+        depchecks = depfiles
         if recursive:
-            dep_path = None
-            for item in depfiles:
-                try:
-                    dep_path = xbmcaddon.Addon(id=item).getAddonInfo('path')
-                except:
-                    dep_path = os.path.join(ADDONS,item)
-
-                if dep_path:
-                    depfiles = Check_Deps(dep_path)
-
-    return depfiles
+            while len(depchecks):
+                for depfile in depfiles:
+                    if depfile not in processed:
+                        try:
+                            dep_path = xbmcaddon.Addon(id=depfile).getAddonInfo('path')
+                        except:
+                            dep_path = os.path.join(ADDONS,depfile)
+                        newdepfiles = Check_Deps(dep_path, depfiles)
+                    # Pass through the path of sub-dependency and add items to master list and list to check
+                        for newdep in newdepfiles:
+                            if not (newdep in depchecks) and not (newdep in processed):
+                                depchecks.append(newdep)
+                            if not newdep in depfiles:
+                                depfiles.append(newdep)
+                    processed.append(depfile)
+                    depchecks.remove(depfile)
+                if name in depchecks:
+                    depchecks.remove(name)
+    return processed[1:]
 #----------------------------------------------------------------
 # TUTORIAL #
 def Get_Addon_ID(folder):
@@ -840,7 +853,7 @@ koding.Refresh('container')
         data_type = Data_Type(addon)
 
     if data_type == 'str' and addon!= 'all':
-        addon = [addon,'']
+        addon = [addon]
 
 # Grab all the add-on ids from addons folder
     if addon == 'all':
@@ -883,41 +896,53 @@ koding.Refresh('container')
 
 # Using the safe_mode (JSON-RPC)
     else:
+        mydeps        = []
         final_enabled = []
         if state:
-            my_value = 'true'
-            log_value = 'ENABLED'
+            my_value      = 'true'
+            log_value     = 'ENABLED'
+            final_addons  = []
         else:
-            my_value = 'false'
-            log_value = 'DISABLED'
+            my_value      = 'false'
+            log_value     = 'DISABLED'
+            final_addons  = addon
 
         for my_addon in addon:
 
-# If enabling the add-on then we also check for dependencies and enable them first
+        # If enabling the add-on then we also check for dependencies and enable them first
             if state:
                 dolog('Checking dependencies for : %s'%my_addon)
-                dependencies = Dependency_Check(addon_id=my_addon, recursive=False)
+                dependencies = Dependency_Check(addon_id=my_addon, recursive=True)
+                mydeps.append(dependencies)
 
-# traverse through the dependencies in reverse order attempting to enable
-                for item in reversed(dependencies):
-                    if not item in exclude_list and not item in final_enabled and not item in enabled_list:
-                        dolog('Attempting to enable: %s'%item)
-                        addon_set = Set_Setting(setting_type='addon_enable', setting=item, value = 'true')
+    # if enable selected we traverse through the dependencies enabling addons with lowest amount of deps to highest
+        if state:
+            mydeps = sorted(mydeps, key=len)
+            for dep in mydeps:
+                counter = 0
+                for item in dep:
+                    enable_dep = True
+                    if counter == 0:
+                        final_addons.append(item)
+                        enable_dep = False
+                    elif item in final_enabled:
+                        enable_dep = False
+                    else:
+                        enable_dep = True
+                    if enable_dep:
+                        if not item in exclude_list and not item in final_enabled and not item in enabled_list:
+                            dolog('Attempting to enable: %s'%item)
+                            if Set_Setting(setting_type='addon_enable', setting=item, value = 'true'):
+                                dolog('%s now %s' % (item, log_value))
+                                final_enabled.append(item)
+                    counter += 1
 
-# If we've successfully enabled then we add to list so we can skip any other instances
-                        if addon_set:
-                            dolog('%s now %s' % (my_addon, log_value))
-                            final_enabled.append(item)
-
-# Now the dependencies are enabled we need to enable the actual main add-on
+    # Now the dependencies are enabled we need to enable the actual main add-ons
+        for my_addon in final_addons:
             if not my_addon in final_enabled:
-                addon_set = Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value)
-            try:
-                if addon_set:
+                if Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value):
                     dolog('%s now %s' % (my_addon, log_value))
                     final_enabled.append(addon)
-            except:
-                pass
     if refresh:
         Refresh(['addons','container'])
 #----------------------------------------------------------------

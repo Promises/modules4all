@@ -114,7 +114,6 @@ AVAILABLE PARAMS:
         # Convert back from special to physical path - useful for community shares
             if urllib.unquote_plus("special://home/") in main_url:
                 main_url = main_url.replace('special://home/',HOME)
-                main_url = urllib.quote_plus(main_url)
         except:
             main_url = ''
         try:

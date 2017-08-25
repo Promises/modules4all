@@ -1,3 +1,7 @@
+v.0.9.7.4:
+- Removed unquote from routing function as it was messing up the final var received
+- Re-work of how Toggle_Addons and Dependency_Check work, should be far more optimised now as when toggling add-ons it enables each dependency one at a time starting with the dependencies with no sub-dependencies and moving on up through the list progressively.
+
 v.0.9.7.3:
 - Another bug fix for routing unquoting issue
 - Added ability to pass through a skip_list in Addon_Service
