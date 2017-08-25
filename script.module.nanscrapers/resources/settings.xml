@@ -16,8 +16,6 @@
 		<setting id="animetoon_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="Bmoviez" type="lsep"/>
 		<setting id="Bmoviez_enabled" type="bool" label="Enabled" default="true"/>
-		<setting label="Cinemabox" type="lsep"/>
-		<setting id="Cinemabox_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="dizi720p" type="lsep"/>
 		<setting id="dizi720p_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="gostream" type="lsep"/>
@@ -28,8 +26,6 @@
 		<setting id="kingmovies_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="M4U" type="lsep"/>
 		<setting id="M4U_enabled" type="bool" label="Enabled" default="true"/>
-		<setting label="moviefree" type="lsep"/>
-		<setting id="moviefree_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="moviegrabber" type="lsep"/>
 		<setting id="moviegrabber_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="Onemusic" type="lsep"/>
@@ -47,6 +43,8 @@
 		<setting id="rlshd_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="sceper" type="lsep"/>
 		<setting id="sceper_enabled" type="bool" label="Enabled" default="true"/>
+		<setting label="toonova" type="lsep"/>
+		<setting id="toonova_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="watchcartoon" type="lsep"/>
 		<setting id="watchcartoon_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="watchepisodes" type="lsep"/>
