@@ -2,6 +2,8 @@ import re
 import requests
 import xbmc
 from ..scraper import Scraper
+from BeautifulSoup import BeautifulSoup as bs
+
 
 class Yesmovies(Scraper):
     domains = ['yesmovies.to']
@@ -17,34 +19,51 @@ class Yesmovies(Scraper):
         try:
             start_url = self.base_link+self.search_link+title.replace(' ','+')+'.html'
             html = requests.get(start_url).content
-            match = re.compile('<div class="ml-item">.+?<a href="(.+?)".+?title="(.+?)"',re.DOTALL).findall(html)
-            for url,name in match:
-                if title.lower().replace(' ','') in name.lower().replace(' ',''):
-                    if title.lower()[0] == name.lower()[0]:
-                        if 'Season '+season in name:
-                            html2 = requests.get(url).content
-                            match2 = re.findall('favorite\((.+?),',html2)[0]
-                            get_ep = requests.get('https://yesmovies.to/ajax/v4_movie_episodes/'+match2).content
-                            block = re.compile('<ul id=.+?"episodes-sv-6(.+?)"(.+?)ul>',re.DOTALL).findall(get_ep)
-                            for c,u in block:
-                                if '9' in c:
-                                    pass
-                                else:
-                                    m = re.compile('<li class=.+?"ep-item .+?".+?data-server=.+?"(.+?)" data-id=.+?"(.+?)".+?title=.+?"(.+?)">').findall(str(u))
-                                    for s,i,t in m:
-                                        ep = re.findall('Episode (.+?):',str(t))[0]
-                                        if len(episode) == 1:
-                                            episode = '0'+episode
-                                        if episode == ep:
-                                            #i = url.replace('.html','/'+i+'-'+s+'/watching.html').replace('\\','')
-                                            self.get_ep_source(i.replace('\\',''),match2)                        
+            self.parse_ep_search_page(html, title, season, episode)
+            bs_html = bs(html)
+            pagination = bs_html.find("ul", "pagination")
+            page_links = pagination.findAll("a")
+            set_links = []
+            for page_link in page_links:
+                if not page_link["href"].startswith("http") or page_link["href"] in set_links:
+                    continue
+                html = requests.get(page_link["href"]).content
+                self.parse_ep_search_page(html, title, season, episode)
+                set_links.append(page_link["href"])
             return self.sources
-                                        
-        except:
-            pass
-            return []                           
 
-    def scrape_movie(self, title, year, imdb, debrid = False):
+        except Exception as e:
+            pass
+            return []
+
+    def parse_ep_search_page(self, html, title, season, episode):
+        match = re.compile('<div class="ml-item">.+?<a href="(.+?)".+?title="(.+?)"',re.DOTALL).findall(html)
+        for url,name in match:
+            if title.lower().replace(' ','') in name.lower().replace(' ',''):
+                if name.lower().startswith(title.lower()):
+                    if 'Season '+season in name:
+                        html2 = requests.get(url).content
+                        match2 = re.findall('favorite\((.+?),',html2)[0]
+                        get_ep = requests.get('https://yesmovies.to/ajax/v4_movie_episodes/'+match2).content
+                        block = re.compile('<ul id=.+?"episodes-sv-6(.+?)"(.+?)ul>',re.DOTALL).findall(get_ep)
+                        for c,u in block:
+                            if '9' in c:
+                                pass
+                            else:
+                                m = re.compile('<li class=.+?"ep-item .+?".+?data-server=.+?"(.+?)" data-id=.+?"(.+?)".+?title=.+?"(.+?)">').findall(str(u))
+                                for s,i,t in m:
+                                    ep = re.findall('Episode (.+?):',str(t))
+                                    if ep:
+                                        ep = ep[0]
+                                    else:
+                                        continue
+                                    if len(episode) == 1:
+                                        episode = '0'+episode
+                                    if episode == ep:
+                                        #i = url.replace('.html','/'+i+'-'+s+'/watching.html').replace('\\','')
+                                        self.get_ep_source(i.replace('\\',''),match2)
+
+    def scrape_movie(self, title, year, imdb, debrid=False):
         try:
             start_url = self.base_link+self.search_link+title.replace(' ','+')+'.html'
             html = requests.get(start_url).content
@@ -61,8 +80,8 @@ class Yesmovies(Scraper):
                             self.get_movie_source(url)
                         else:
                             pass
-                        
-                        
+
+
             return self.sources
         except:
             pass

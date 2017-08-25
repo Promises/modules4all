@@ -6,10 +6,11 @@ import threading
 Executor = concurrent.futures.ThreadPoolExecutor
 
 
-def execute(f, iterable, stop_flag=None, workers=10, timeout = 30):
+def execute(f, iterable, stop_flag=None, workers=10, timeout=30):
     with Executor(max_workers=workers) as executor:
         threading.Timer(timeout, stop_flag.set)
-        for future in _batched_pool_runner(executor, workers, f, iterable):
+        for future in _batched_pool_runner(executor, workers, f,
+                                           iterable, timeout):
 
             if xbmc.abortRequested:
                 break
@@ -18,17 +19,8 @@ def execute(f, iterable, stop_flag=None, workers=10, timeout = 30):
             yield future.result()
 
 
-def _batched_pool_runner(pool, batch_size, f, iterable):
-    it = iter(iterable)
+def _batched_pool_runner(pool, batch_size, f, iterable, timeout):
+    futures = {pool.submit(f, x): x for x in iterable}
 
-    # Submit the first batch of tasks.
-    futures = set(pool.submit(f, x) for x in islice(it, batch_size))
-
-    while futures:
-        done, futures = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
-
-        # Replenish submitted tasks up to the number that completed.
-        futures.update(pool.submit(f, x) for x in islice(it, len(done)))
-
-        for d in done:
-            yield d
+    for item in concurrent.futures.as_completed(futures, timeout):
+        yield item

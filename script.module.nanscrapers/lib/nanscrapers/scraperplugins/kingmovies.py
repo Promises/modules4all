@@ -3,9 +3,12 @@ import requests
 import base64
 import random
 import xbmc
+import urlparse
 from ..common import random_agent
 from ..scraper import Scraper
 from ..jsunpack import unpack
+from BeautifulSoup import BeautifulSoup as BS
+
 
 class Kingmovies(Scraper):
     domains = ['kingmovies.is']
@@ -20,9 +23,11 @@ class Kingmovies(Scraper):
         try:
             heads = {'User-Agent': random_agent()}
             start_url = self.base_link+'/search?q='+title.replace(' ','+')
-            html = requests.get(start_url,headers=heads).content
-            match = re.compile("<h4 class='item-title'><a href='(.+?)' title='.+?'>(.+?)</a></h4>").findall(html)
-            for url2, name in match:
+            html = BS(requests.get(start_url,headers=heads).content)
+            movie_links = html.findAll("a", attrs={"class": "thumb"})
+            for movie_link in movie_links:
+                url2 = movie_link["href"]
+                name = movie_link["title"]
                 if title.lower() in name.replace(':','').lower():
                     if (title.lower())[0]==(name.lower())[0]:
                         if 'Season '+season in name:
@@ -34,37 +39,45 @@ class Kingmovies(Scraper):
                                         episode = '0'+episode
                                     if 'Episode '+episode in name2:
                                         html3 = requests.get(url3,headers=heads).content
-                                        match3 = re.compile('<div id="content-embed">.+?src="(.+?)"',re.DOTALL).findall(html3)
+                                        match3 = re.compile('<iframe id="iframe-embed".+?src="(.+?)"',re.DOTALL).findall(html3)
+                                        match3 = set(match3)
                                         for link in match3:
                                             if not link.startswith('http:'):
                                                 link = 'http:'+link
                                             self.get_source(link)
             return self.sources
-                                        
+
         except:
             pass
-            return []                           
+            return []
 
-    def scrape_movie(self, title, year, imdb, debrid = False):
+    def scrape_movie(self, title, year, imdb, debrid=False):
         try:
             heads = {'User-Agent': random_agent()}
-            start_url = self.base_link+'/search?q='+title.replace(' ','+')
-            html = requests.get(start_url,headers=heads).content
-            match = re.compile("<h4 class='item-title'><a href='(.+?)' title='.+?'>(.+?)</a></h4>").findall(html)
-            for url2, name in match:
+            start_url = self.base_link+'/search?q='+title.replace(' ', '+')
+            html = BS(requests.get(start_url, headers=heads).content)
+            movie_links = html.findAll("a", attrs={"class": "thumb"})
+            for movie_link in movie_links:
+                url2 = movie_link["href"]
+                name = movie_link["title"]
                 if title.replace(':','').lower() in name.replace(':','').lower():
                     if year in name:
+                        quality = movie_link.findAll("div", attrs={"class": "gr-quality"})[0].text
                         url2 = url2+'/watching.html'
                         html2 = requests.get(url2,headers=heads).text
-                        match2 = re.compile('<div id="content-embed">.+?src="(.+?)"',re.DOTALL).findall(html2)                                
+                        match2 = re.compile('<iframe id="iframe-embed".+?src="(.+?)"',re.DOTALL).findall(html2)
+                        match2 = set(match2)
                         for link in match2:
                             if not link.startswith('http:'):
                                 link = 'http:'+link
                             self.get_source(link)
+                            #loc = urlparse.urlparse(link).netloc  # get base host (ex. www.google.com)
+                            #source_base = str.join(".", loc.split(".")[1:-1])
+                            #self.sources.append({'source': source_base, 'quality': quality, 'scraper': self.name, 'url': link,'direct': True})
             return self.sources
-        except:
-            pass
-            return[]
+        except Exception as e:
+            xbmc.log("e:" + repr(e))
+            return self.sources
 
     def get_source(self,link):
         try:
@@ -90,7 +103,7 @@ class Kingmovies(Scraper):
                            "referer":link,
                            "user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"
                            }
-                
+
                 data = {"episodeID":ep_id,
                         "episodeName":ep_name,
                         "episodeBackup":ep_backup,
@@ -98,19 +111,24 @@ class Kingmovies(Scraper):
                         "file":File
                         }
                 response = requests.post(self.api,headers=headers,data=data).json()
-                results = response["sources"]
+                results = []
+                results.extend([response["sources"]])
                 try:
-                    results.extend(response["sources_backup"])
+                    results.extend([response["sources_backup"]])
                 except:
                     results = results
-                for item in results:
-                    playlink = item["file"]
-                    quality = item["label"]
-                    if '=m' in playlink:
-                        source = 'Gvideo'
-                    else:
-                        source = 'Streamdor'
-                    self.sources.append({'source': source, 'quality': quality, 'scraper': self.name, 'url': playlink,'direct': True})
+                for result in results:
+                    if not result.startswith("http:"):
+                        result = "http:" + result
+                    response2 = requests.get(result).content
+                    m = re.compile('"file":"(.+?)".+?"label":"(.+?)"').findall(response2)
+                    for playlink,quality in m:
+                        playlink = playlink.replace('\\','')
+                        if '=m' in playlink:
+                            source = 'Gvideo'
+                        else:
+                            source = 'Streamdor'
+                        self.sources.append({'source': source, 'quality': quality, 'scraper': self.name, 'url': playlink,'direct': True})
         except:
             pass
-Kingmovies()        
+# Kingmovies()

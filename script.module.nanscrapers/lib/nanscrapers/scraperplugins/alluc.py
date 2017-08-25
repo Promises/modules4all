@@ -16,7 +16,7 @@
 '''
 
 import re, urllib, urlparse, hashlib, random, string, json, base64
-from ..common import random_agent, clean_title, googletag, filter_host, clean_search
+from ..common import random_agent, clean_title, googletag, filter_host, clean_search, get_rd_domains
 import requests
 from ..scraper import Scraper
 import xbmcaddon
@@ -48,6 +48,8 @@ class Alluc(Scraper):
     def scrape_movie(self, title, year, imdb, debrid = False):
         try:
             if debrid:
+                global alluc_debrid
+                alluc_debrid = "true"
                 self.api_link = 'http://www.alluc.ee/api/search/download/?user=%s&password=%s&query=%s'
             url = self.movie(imdb, title, year)
             sources = self.sources(url, [], [])
@@ -96,6 +98,8 @@ class Alluc(Scraper):
     def scrape_episode(self, title, show_year, year, season, episode, imdb, tvdb, debrid = False):
         try:
             if debrid:
+                global alluc_debrid
+                alluc_debrid = "true"
                 self.api_link = 'http://www.alluc.ee/api/search/download/?user=%s&password=%s&query=%s'
             show_url = self.tvshow(imdb, tvdb, title, show_year)
             url = self.episode(show_url, imdb, tvdb, title, year, season, episode)
@@ -170,7 +174,12 @@ class Alluc(Scraper):
                     host = 'alluc'
 
                 if not filter_host(host) and not host == 'alluc':
-                    continue
+                    if alluc_debrid == "true":
+                        rd_domains = get_rd_domains()
+                        if host not in rd_domains:
+                            continue
+                    else:
+                        continue
                 print ("ALLUC SOURCES", url, quality)
                 # if not host in hostDict: continue
                 if alluc_debrid == 'true':

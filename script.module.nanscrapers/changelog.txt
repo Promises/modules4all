@@ -1,3 +1,8 @@
+v0.5.26
+- added a few RD scrapers (converted from elysium)
+- fixed/improved a few scrapers
+- respects timeout parameter now (throws error on timeout for non dialog methods)
+
 v0.5.25
 - added yesmovies
 - added gostream

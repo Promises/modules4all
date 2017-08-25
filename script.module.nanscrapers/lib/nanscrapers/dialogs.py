@@ -57,7 +57,7 @@ class ExtendedDialogHacks(object):
         #            Thread(target = lambda: self.numeric_keyboard.show()).start()
         #            wait_for_dialog('numericinput', interval=50)
 
-        # Show fanart background         
+        # Show fanart background
         self.fanart_window.show()
 
         # Run background task
@@ -209,37 +209,41 @@ class SelectorDialog(xbmcgui.WindowXMLDialog):
     def _populate(self):
         xbmc.sleep(500)  # Delay population to let ui settle
         self.label.setLabel(self.title)
-        for result in self.populator():
-            self.step()
+        try:
+            for result in self.populator():
+                self.step()
 
-            if not result:
-                continue
+                if not result:
+                    continue
 
-            with self.lock:
-                # Remember selected item
-                selectedItem = None
-                if self.insideIndex == -1:
-                    selectedIndex = self.list.getSelectedPosition()
-                else:
-                    selectedIndex = self.insideIndex
-                if selectedIndex >= 0:
-                    selectedItem = self.items[selectedIndex]
+                with self.lock:
+                    # Remember selected item
+                    selectedItem = None
+                    if self.insideIndex == -1:
+                        selectedIndex = self.list.getSelectedPosition()
+                    else:
+                        selectedIndex = self.insideIndex
+                    if selectedIndex >= 0:
+                        selectedItem = self.items[selectedIndex]
 
-                # Add new item
-                self.items.extend(result)
-                if self.sort_function:
-                    self.items = sorted(self.items, key = self.sort_function)
-                #self.items.sort()
+                    # Add new item
+                    self.items.extend(result)
+                    if self.sort_function:
+                        self.items = sorted(self.items, key = self.sort_function)
+                    #self.items.sort()
 
-                # Retrived new selection-index
-                if selectedItem is not None:
-                    selectedIndex = self.items.index(selectedItem)
-                    if self.insideIndex != -1:
-                        self.insideIndex = selectedIndex
+                    # Retrived new selection-index
+                    if selectedItem is not None:
+                        selectedIndex = self.items.index(selectedItem)
+                        if self.insideIndex != -1:
+                            self.insideIndex = selectedIndex
 
-                # Update only if in root
-                if self.insideIndex == -1:
-                    self._inside_root(select=selectedIndex)
-                    self.setFocus(self.list)
-
+                    # Update only if in root
+                    if self.insideIndex == -1:
+                        self._inside_root(select=selectedIndex)
+                        self.setFocus(self.list)
+        except:
+            self.label.setLabel(
+                u"{0} - {1:d}% ({2}/{3})".format(self.title, 100,
+                                                 self.steps, self.steps))
         pass

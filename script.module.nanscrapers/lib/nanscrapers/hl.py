@@ -179,14 +179,17 @@ class HostedLink:
                 sources = []
             else:
                 if cache_enabled:
-                    dbcur.execute(
-                        "DELETE FROM rel_src WHERE scraper = '%s' AND title = '%s' AND show_year= '%s' AND year = '%s' AND season = '%s' AND episode = '%s'" % (
-                            scraper.name, clean_title(title).upper(), show_year, year, season, episode))
-                    dbcur.execute("INSERT INTO rel_src Values (?, ?, ?, ?, ?, ?, ?, ?, ?)", (
-                        scraper.name, clean_title(title).upper(), show_year, year, season, episode, imdb,
-                        json.dumps(sources),
-                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
-                    dbcon.commit()
+                    try:
+                        dbcur.execute(
+                            "DELETE FROM rel_src WHERE scraper = '%s' AND title = '%s' AND show_year= '%s' AND year = '%s' AND season = '%s' AND episode = '%s'" % (
+                                scraper.name, clean_title(title).upper(), show_year, year, season, episode))
+                        dbcur.execute("INSERT INTO rel_src Values (?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+                            scraper.name, clean_title(title).upper(), show_year, year, season, episode, imdb,
+                            json.dumps(sources),
+                            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+                        dbcon.commit()
+                    except:
+                        pass
 
             if check_url:
                 noresolver = False
@@ -287,7 +290,11 @@ class HostedLink:
                     quality = str(int(link['quality'])) + "p"
                 except:
                     quality = link['quality']
+                if not quality:
+                    quality = "SD"
                 label = link["source"] + " - " + link["scraper"] + " (" + quality + ")"
+                if link.get("debridonly", ""):
+                    label += " (RD)"
                 # grouping_label = link["source"] + " (" + quality + ")"
                 # if not grouping_label in labels:
                 #     labels[grouping_label] = []

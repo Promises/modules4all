@@ -2,6 +2,7 @@ import re
 import requests
 import xbmc
 from ..scraper import Scraper
+from BeautifulSoup import BeautifulSoup as BS
 
 class Quickmovies(Scraper):
     domains = ['quickmovies.tv']
@@ -12,18 +13,19 @@ class Quickmovies(Scraper):
         self.base_link = 'http://quickmovies.tv'
 #        self.scrape_movie('sleight', '2016', '')
 
-    def scrape_movie(self, title, year, imdb, debrid = False):
+    def scrape_movie(self, title, year, imdb, debrid=False):
         try:
-            start_url = self.base_link+'/?s='+title.replace(' ','+')
-            html = requests.get(start_url).text
-            match = re.compile('<div data-movie-id=".+?" class="ml-item"><a href="(.+?)".+?oldtitle="(.+?)"').findall(html)
-            for url2, name in match:
+            start_url = self.base_link+'/?s='+title.replace(' ', '+')
+            html = BS(requests.get(start_url).text)
+            movie_links = html.findAll("a", attrs={"class": "linker"})
+            for movielink in movie_links:
+                url2 = movielink["href"]
+                name = movielink["title"]
+                quality = movielink.findAll("span", attrs={"class": "quality"})[0].text
                 if title.lower() in name.lower():
                     html2 = requests.get(url2).text
-                    match2 = re.compile('<div class="movieplay"><iframe id="video" src="(.+?)"',re.DOTALL).findall(html2)
-                    qual = re.compile('<span class="quality">(.+?)</span>').findall(html2)
-                    for q in qual:
-                        q = q
+                    match2 = re.compile('data-player-content=\'<iframe.+?src="(.+?)"',re.DOTALL).findall(html2)
+                    q = quality
                     for link in match2:
                         print link
                         print q
@@ -33,7 +35,7 @@ class Quickmovies(Scraper):
                             for link3 in match4:
                                 link3 = 'https:'+link3
                                 self.sources.append({'source': 'streamango' , 'quality': q, 'scraper' : self.name, 'url' : link3, 'direct': False})
-                        
+
                         elif 'streamvip2' in link:
                             html5 = requests.get(link).text
                             match5 = re.compile('xmlhttp.open("GET","(.+?)"').findall(html5)
@@ -43,9 +45,9 @@ class Quickmovies(Scraper):
                                 match6 = re.compile("DownloadButtonAd-startDownload gbtnSecondary.+?href='(.+?)'").findall(html6)
                                 for link4 in match6:
                                     self.sources.append({'source': 'Streamvip' , 'quality': q, 'scraper' : self.name, 'url' : link4, 'direct': False})
-                        
+
                         elif 'put' in link:
-                        	self.sources.append({'source': 'Putmovie' , 'quality': q, 'scraper' : self.name, 'url' : link, 'direct': False})
+                                self.sources.append({'source': 'Putmovie' , 'quality': q, 'scraper' : self.name, 'url' : link, 'direct': False})
                         elif 'watchhere' in link:
                             print '~~~~'+link
                             html3 = requests.get(link).text
@@ -60,9 +62,9 @@ class Quickmovies(Scraper):
                                 trymatch2 = re.compile('file: "(.+?)"').findall(tryhtml2)
                                 for plink in trymatch2:
                                     self.sources.append({'source': 'watchhere' , 'quality': q, 'scraper' : self.name, 'url' : plink, 'direct': False})
+                        elif "openload" in link:
+                            self.sources.append({'source': 'Openload', 'quality': q, 'scraper': self.name, 'url': link, 'direct': False})
             return self.sources
-                        
+
         except:
             pass
-
-

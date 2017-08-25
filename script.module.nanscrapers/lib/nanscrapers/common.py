@@ -4,6 +4,7 @@ import random
 import re
 import urllib2
 import urlparse
+import requests
 
 
 def clean_title(title):
@@ -292,3 +293,57 @@ checks if passed url is a live link
         pass
 
     return result
+
+
+def get_rd_domains():
+    import xbmc
+    import xbmcaddon
+    import os
+    try:
+        from sqlite3 import dbapi2 as database
+    except:
+        from pysqlite2 import dbapi2 as database
+    import datetime
+
+    cache_location = os.path.join(
+            xbmc.translatePath(xbmcaddon.Addon("script.module.nanscrapers").getAddonInfo('profile')).decode('utf-8'),
+            'url_cache.db')
+    try:
+            dbcon = database.connect(cache_location)
+            dbcur = dbcon.cursor()
+            try:
+                dbcur.execute("SELECT * FROM version")
+                match = dbcur.fetchone()
+            except:
+                dbcur.execute("CREATE TABLE version (""version TEXT)")
+                dbcur.execute("INSERT INTO version Values ('0.5.4')")
+                dbcon.commit()
+            dbcur.execute(
+                "CREATE TABLE IF NOT EXISTS rd_domains (""domains TEXT, ""added TEXT"");")
+    except Exception as e:
+        pass
+
+    try:
+        sources = []
+        dbcur.execute(
+            "SELECT * FROM rd_domains")
+        match = dbcur.fetchone()
+        t1 = int(re.sub('[^0-9]', '', str(match[1])))
+        t2 = int(datetime.datetime.now().strftime("%Y%m%d%H%M"))
+        update = abs(t2 - t1) > 60 * 24
+        if update is False:
+            sources = json.loads(match[0])
+            return sources
+    except Exception as e:
+        pass
+    url = 'https://api.real-debrid.com/rest/1.0/hosts/domains'
+    domains = requests.get(url).json()
+    try:
+        dbcur.execute("DELETE FROM rd_domains WHERE added = %s" %(match[1]))
+    except:
+        pass
+    dbcur.execute("INSERT INTO rd_domains Values (?, ?)", (
+                        json.dumps(domains),
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+    dbcon.commit()
+    return domains

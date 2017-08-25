@@ -24,19 +24,16 @@ class Gostream(Scraper):
                     if title.lower()[0] == name.lower()[0]:
                         if '(' in name:
                             if year in name:
-                                html2 = requests.get(url).text 
+                                html2 = requests.get(url).text
                                 match2 = re.compile('<div id="mv-info">.+?<a.+?href="(.+?)".+?title',re.DOTALL).findall(html2)
                                 for url2 in match2:
-                                    xbmc.log("url2: " + repr(url2), xbmc.LOGNOTICE)
                                     qual = ''
                                     html2 = requests.get(url2).text
                                     match3 = re.compile('<a onclick="favorite\((.+?),',re.DOTALL).findall(html2)
                                     for i in match3:
-                                        xbmc.log("u: " + repr(i), xbmc.LOGNOTICE)
                                         html3 = requests.get(self.base_link+'/ajax/movie_episodes/'+i).json()
                                         data = re.findall('data-id="(.+?)"',html3['html'])
                                         for u in data:
-                                            xbmc.log("u: " + repr(u), xbmc.LOGNOTICE)
                                             if len(u) == 6:
                                                 s = self.base_link+'/ajax/movie_token?eid='+u+'&mid='+i
                                                 html3 = requests.get(s).content
@@ -59,9 +56,3 @@ class Gostream(Scraper):
             return self.sources
         except:
             pass
-            
-                        
-
-
-    
-
