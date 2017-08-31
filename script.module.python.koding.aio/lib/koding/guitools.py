@@ -23,7 +23,8 @@ import xbmc
 import xbmcgui
 from systemtools import Last_Error
 
-dialog = xbmcgui.Dialog()
+dialog      = xbmcgui.Dialog()
+koding_path = xbmc.translatePath("special://home/addons/script.module.python.koding.aio")
 #----------------------------------------------------------------    
 # TUTORIAL #
 def Browse_To_Folder(header='Select the folder you want to use', path = 'special://home'):
@@ -236,7 +237,6 @@ my_buttons = ['button 1', 'button 2', 'button 3','button 4', 'button 5', 'button
 my_choice = koding.Custom_Dialog(main_content=main_text,pos='center',size='fullscreen',buttons=my_buttons)
 dialog.ok('CUSTOM DIALOG 2','You selected option %s'%my_choice,'The value of this is: [COLOR=dodgerblue]%s[/COLOR]'%my_buttons[my_choice])
 ~"""
-    koding_path = xbmc.translatePath("special://home/addons/script.module.python.koding.aio")
     skin_path   = os.path.join(koding_path,"resources","skins","Default","720p")
     ACTION      = -1
 # Convert the transparency percentage to hex
@@ -591,6 +591,133 @@ koding.Text_Box('TEST HEADER','Just some random text... Use kodi tags for new li
     controller.getControl(1).setLabel(header)
     controller.getControl(5).setText(message)
 #----------------------------------------------------------------
+# TUTORIAL #
+def Update_Progress(total_items,current_item,update_spinner="false",**kwargs):
+    """
+This function is designed for skinners but can be used for general Python too. It will
+work out the current percentage of items that have been processed and update the skin
+string "update_percentbar" accordingly (1-100). You can also send through any properties
+you want updated and it will loop through updating them with the relevant values.
+
+To send through properties just send through the property name as the param and assign to a value.
+Example: Update_Progress(total_items=100,current_item=56,myproperty1='test1',myproperty2='test2')
+
+
+CODE: Text_Box(total_items,current_item,[kwargs])
+
+AVAILABLE PARAMS:
+
+    (*) total_items  -  Total amount of items in your list you're processing
+
+    (*) current_item -  Current item number that's been processed.
+
+    kwargs  -  Send through any other params and the respective property will be set.colours etc.')
+~"""
+    counter = 0
+    while counter <= 100:
+        xbmcgui.Window(10000).clearProperty('update_percent_%s'%counter)
+        counter +=1
+    xbmcgui.Window(10000).setProperty('update_spinner',str(update_spinner))
+    for item in kwargs:
+        if item.endswith('color'):
+            value = '0xFF'+kwargs[item]
+        else:
+            value = kwargs[item]
+        if value == 'false' or value == '' and not item.endswith('color'):
+            xbmcgui.Window(10000).clearProperty(item)
+        elif value:
+            xbmcgui.Window(10000).setProperty(item, value)
+    percent = 100*(current_item/(total_items*1.0))
+    newpercent=int(percent)
+    if (newpercent % 1 == 0) and (newpercent <=100):
+        xbmcgui.Window(10000).setProperty('update_percent',str(newpercent))
+        xbmcgui.Window(10000).setProperty('update_percent_%s'%newpercent,'true')
+    if newpercent == 100:
+        xbmc.executebuiltin('Action(firstpage)')
+#-----------------------------------------------------------------------------
+# TUTORIAL #
+def Update_Screen(disable_quit=False, auto_close=True):
+    """
+This will create a full screen overlay showing progress of updates. You'll need to
+use this in conjunction with the Update_Progress function.
+
+
+AVAILABLE PARAMS:
+
+    disable_quit  -  By default this is set to False and pressing the parent directory
+    button (generally esc) will allow you to close the window. Setting this to True
+    will mean it's not possible to close the window manually.
+
+    auto_close  -  By default this is set to true and when the percentage hits 100
+    the window will close. If you intend on then sending through some more commands
+    you might want to consider leaving this window open in which case you'd set this
+    to false. Bare in mind if you go this route the window will stay active until
+    you send through the kill command which is: xbmc.executebuiltin('Action(firstpage)')
+
+EXAMPLE CODE:
+mykwargs = {
+    "update_header"    : "Downloading latest updates",\
+    "update_main_text" : "Your device is now downloading all the latest updates.\nThis shouldn\'t take too long, "\
+                         "depending on your internet speed this could take anything from 2 to 10 minutes.\n\n"\
+                         "Once downloaded the system will start to install the updates.",\
+    "update_bar_color" : "4e91cf",\
+    "update_spinner"   : "true"}
+Update_Screen()
+counter = 1
+while counter <= 60:
+    xbmc.sleep(300)
+    Update_Progress(total_items=60,current_item=counter,**mykwargs)
+    if counter == 30:
+        mykwargs = {
+            "update_header"        : "Halfway there!",\
+            "update_main_text"     : "We just updated the properties to show how you can change things on the fly "\
+                                     "simply by sending through some different properties. Both the icon and the "\
+                                     "background images you see here are being pulled from online.",\
+            "update_header_color"  : "4e91cf",\
+            "update_percent_color" : "4e91cf",\
+            "update_bar_color"     : "4e91cf",\
+            "update_background"    : "http://www.planwallpaper.com/static/images/518164-backgrounds.jpg",\
+            "update_icon"          : "http://totalrevolution.tv/img/tr_small_black_bg.jpg",\
+            "update_spinner"       : "false"}
+    counter += 1
+~"""
+    import threading
+    update_screen_thread = threading.Thread(target=Show_Update_Screen, args=[disable_quit, auto_close])
+    update_screen_thread.start()
+    xbmc.sleep(2000)
+
+def Show_Update_Screen(disable_quit=False,auto_close=True):
+    xbmcgui.Window(10000).clearProperty('update_icon')
+    xbmcgui.Window(10000).clearProperty('update_percent')
+    xbmcgui.Window(10000).clearProperty('update_spinner')
+    xbmcgui.Window(10000).clearProperty('update_header')
+    xbmcgui.Window(10000).clearProperty('update_main_text')
+    xbmcgui.Window(10000).setProperty('update_background','whitebg.jpg')
+    xbmcgui.Window(10000).setProperty('update_percent_color','0xFF000000')
+    xbmcgui.Window(10000).setProperty('update_bar_color','0xFF000000')
+    xbmcgui.Window(10000).setProperty('update_main_color','0xFF000000')
+    xbmcgui.Window(10000).setProperty('update_header_color','0xFF000000')
+# Set a property so we can determine if update screen is active
+    xbmcgui.Window(10000).setProperty('update_screen','active')
+    d=MyUpdateScreen('Loading.xml',koding_path,disable_quit=disable_quit,auto_close=auto_close)
+    d.doModal()
+    del d
+    xbmcgui.Window(10000).clearProperty('update_screen')
+
+class MyUpdateScreen(xbmcgui.WindowXMLDialog):
+    def __init__(self,*args,**kwargs):
+        self.disable_quit=kwargs['disable_quit']
+        self.auto_close=kwargs['auto_close']
+        self.WINDOW=xbmcgui.Window( 10000 )
+    def onAction( self, action ):
+        if action in [10,7]:
+            if self.disable_quit:
+                xbmc.log("ESC and HOME Disabled",2)
+            else:
+                self.close()
+        if action==159 and self.auto_close:
+            self.close()
+#----------------------------------------------------------------    
 # TUTORIAL #
 def YesNo_Dialog(title,message,yes=None,no=None):
     """
