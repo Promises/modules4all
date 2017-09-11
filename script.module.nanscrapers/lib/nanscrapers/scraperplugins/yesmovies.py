@@ -3,6 +3,7 @@ import requests
 import xbmc
 from ..scraper import Scraper
 from BeautifulSoup import BeautifulSoup as bs
+from ..common import random_agent, clean_title, googletag, filter_host, clean_search
 
 
 class Yesmovies(Scraper):
@@ -17,7 +18,7 @@ class Yesmovies(Scraper):
 
     def scrape_episode(self, title, show_year, year, season, episode, imdb, tvdb, debrid = False):
         try:
-            start_url = self.base_link+self.search_link+title.replace(' ','+')+'.html'
+            start_url = self.base_link+self.search_link+title.replace('marvels','').replace('marvel\'s','').replace(' ','+')+'.html'
             html = requests.get(start_url).content
             self.parse_ep_search_page(html, title, season, episode)
             bs_html = bs(html)
@@ -38,10 +39,10 @@ class Yesmovies(Scraper):
 
     def parse_ep_search_page(self, html, title, season, episode):
         match = re.compile('<div class="ml-item">.+?<a href="(.+?)".+?title="(.+?)"',re.DOTALL).findall(html)
-        for url,name in match:
-            if title.lower().replace(' ','') in name.lower().replace(' ',''):
-                if name.lower().startswith(title.lower()):
-                    if 'Season '+season in name:
+        for url, name in match:
+            if clean_title(title).replace("-","") in clean_title(name).replace("-",""):
+                if clean_title(name).startswith(clean_title(title)) or name.lower().startswith(title.lower()):
+                    if 'Season ' +season in name:
                         html2 = requests.get(url).content
                         match2 = re.findall('favorite\((.+?),',html2)[0]
                         get_ep = requests.get('https://yesmovies.to/ajax/v4_movie_episodes/'+match2).content
@@ -65,7 +66,7 @@ class Yesmovies(Scraper):
 
     def scrape_movie(self, title, year, imdb, debrid=False):
         try:
-            start_url = self.base_link+self.search_link+title.replace(' ','+')+'.html'
+            start_url = self.base_link+self.search_link+title.replace('marvels','').replace('marvel\'s','').replace(' ','+')+'.html'
             html = requests.get(start_url).content
             match = re.compile('<div class="ml-item">.+?<a href="(.+?)".+?title="(.+?)"',re.DOTALL).findall(html)
             for url,name in match:

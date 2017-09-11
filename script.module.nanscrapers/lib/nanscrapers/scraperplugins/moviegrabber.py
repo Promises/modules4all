@@ -3,10 +3,11 @@ import requests
 import xbmc
 import urllib
 from ..scraper import Scraper
-from BeautifulSoup import BeautifulSoup as BS
 import urlparse
 
-session = requests.Session()
+requests.packages.urllib3.disable_warnings()
+
+user_headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:55.0) Gecko/20100101 Firefox/55.0'}
 
 
 class moviegrabber(Scraper):
@@ -15,191 +16,95 @@ class moviegrabber(Scraper):
     sources = []
 
     def __init__(self):
-        self.base_link = 'https://moviegrabber.tv/'
+        self.base_link = 'https://moviegrabber.tv'
+        self.info_link = 'https://moviegrabber.tv/api/media/getDetails?id='
+        self.info_url = 'https://moviegrabber.tv/link/'
+#        self.scrape_movie('moana','2016','')
+#        self.scrape_episode('gotham', '2013', '2017', '3', '6', '', '')
         self.sources = []
 
     def scrape_movie(self, title, year, imdb, debrid=False):
         try:
             search_id = urllib.quote_plus(title.lower())
-            start_url = self.base_link+'search/?id=' + search_id
-            html = BS(session.get(start_url, verify=False).content)
-            thumbnails = html.findAll("div", attrs={"class": "thumbnail"})
-            for thumbnail in thumbnails:
-                link_title = thumbnail.find("p").text
-                if not (title in link_title and year in link_title):
+            start_url = self.base_link+'/searchaskforapi/?id=' + search_id
+            html = requests.get(start_url, headers=user_headers, timeout=10, verify=False).content
+            thumbs = re.compile('class="thumbnail">(.+?)</div>',re.DOTALL).findall(html)
+            thumb = re.compile('href="(.+?)".+?class="text-center text-bold">(.+?)</p>',re.DOTALL).findall(str(thumbs))
+            for url,link_title in thumb:
+                if not (title.lower() in link_title.lower() and year in link_title):
                     continue
-                url = thumbnail.find("a")["href"]
                 movie_link = self.base_link + url
-                html2 = BS(session.get(movie_link, verify=False).content)
-                scripts = html2.findAll("script")
-                for script in scripts:
-                    match = re.findall(
-                        '\[?{?"id": "(.*?)".*?"title": "(.*?)"',
-                        script.text,
-                        re.DOTALL)
-                    if not match:
-                        continue
-                    match2 = re.findall(
-                        'showid.attr\("value", (\d+)',
-                        script.text,
-                        re.DOTALL)
-                    if not match2:
-                        continue
-                    match3 = re.findall(
-                        'var csrf = .*?value="(.*?)"',
-                        script.text,
-                        re.DOTALL)
-                    if not match3:
-                        continue
-                    csrf = match3[0]
-                    showid = match2[0]
-                    for i, _ in enumerate(match):
-                        epid = match[i][0]
-                        epname = match[i][1].replace("\\u00a0", " ")
-                        quality = re.findall("\[(.*?)\]", epname)
-                        if not quality:
-                            quality = "unknown"
-                        else:
-                            quality = quality[0]
+                self.get_source(movie_link)
 
-                        data = {
-                            "epid": epid,
-                            "showid": showid,
-                            "epname": epname,
-                            "foo": "%s (%s)" % (title, year),
-                            "csrfmiddlewaretoken": csrf
-                        }
-                        headers = {"Referer": movie_link}
-                        links_html = BS(session.post(self.base_link + "link/",
-                                                     data=data,
-                                                     verify=False,
-                                                     headers=headers).text)
-                        list_group_items = links_html.findAll(
-                            "a",
-                            attrs={"class": "list-group-item"})
-                        link_set = set()
-                        for list_group_item in list_group_items:
-                            link = list_group_item["href"]
-                            play_link = self.base_link + link[1:]
-                            link_set.add(play_link)
-                        for url2 in link_set:
-                            html3 = session.get(url2, verify=False).text
-                            match2 = re.findall('.*?<source src="(.*?)"',
-                                                html3)
-                            if match2:
-                                for link in match2:
-                                    # get base host (ex. www.google.com)
-                                    loc = urlparse.urlparse(link).netloc
-                                    loc_fragment = loc.split(".")[1:-1]
-                                    source_base = str.join(".",
-                                                           loc_fragment)
-                                    if "google" in source_base:
-                                        source_base = "google video"
-                                    link = link.replace('&amp;', "&")
-                                    self.sources.append(
-                                        {'source': source_base,
-                                         'quality': quality,
-                                         'scraper': self.name,
-                                         'url': link,
-                                         'direct': True})
-                return self.sources
-        except Exception, argument:
+            return self.sources
+        except Exception as e:
+            print repr(e)
             return self.sources
 
     def scrape_episode(self,title, show_year, year, season, episode, imdb, tvdb, debrid = False):
         try:
             search_id = urllib.quote_plus(title.lower())
-            start_url = self.base_link+'search/?id=' + search_id
-            html = BS(session.get(start_url, verify=False).content)
-            thumbnails = html.findAll("div", attrs={"class": "thumbnail"})
-            for thumbnail in thumbnails:
-                link_title = thumbnail.find("p").text
-                if not title in link_title:
-                    continue
-                url = thumbnail.find("a")["href"]
-                movie_link = self.base_link + url
-                html2 = BS(session.get(movie_link, verify=False).content)                
-                caption = html2.findAll("div", attrs={"class":"caption"})[0]
-                link_year = re.findall("Year: (\d+)", str(caption.contents[1].text))[0]
-                if link_year != show_year:
-                    continue
-                scripts = html2.findAll("script")
-                for script in scripts:
-                    match = re.findall(
-                        '\[?{?"id": "(.*?)".*?"title": "(.*?)"',
-                        script.text,
-                        re.DOTALL)
-                    if not match:
-                        continue
-                    match2 = re.findall(
-                        'showid.attr\("value", (\d+)',
-                        script.text,
-                        re.DOTALL)
-                    if not match2:
-                        continue
-                    match3 = re.findall(
-                        'var csrf = .*?value="(.*?)"',
-                        script.text,
-                        re.DOTALL)
-                    if not match3:
-                        continue
-                    csrf = match3[0]
-                    showid = match2[0]
-                    for i, _ in enumerate(match):
-                        epid = match[i][0]
-                        epname = match[i][1].replace("\\u00a0", " ")
-                        if epname.lower() != "%s s%02de%02d" % (title.lower(), int(season), int(episode)):
-                            continue
-                        data = {
-                            "epid": epid,
-                            "showid": showid,
-                            "epname": epname,
-                            "foo": "%s (%s)" % (title, year),
-                            "csrfmiddlewaretoken": csrf
-                        }
-                        headers = {"Referer": movie_link}
-                        links_html = BS(session.post(self.base_link + "link/",
-                                                     data=data,
-                                                     verify=False,
-                                                     headers=headers).text)
-                        list_group_items = links_html.findAll(
-                            "a",
-                            attrs={"class": "list-group-item"})
-                        link_set = set()
-                        for list_group_item in list_group_items:
-                            link = list_group_item["href"]
-                            play_link = self.base_link + link[1:]
-                            quality = re.findall("(\d+)p", list_group_item.text)
-                            if not quality:
-                                quality = "unknown"
-                            else:
-                                quality = quality[0]
-                            link_set.add((play_link, quality))
-                        for (url2, quality) in link_set:                            
-                            html3 = session.get(url2, verify=False).text
-                            match2 = re.findall('.*?<source src="(.*?)"',
-                                                html3)
-                            if not match2:
-                                html3 = BS(html3)
-                                iframe = html3.find("iframe")                                
-                                match2 = [iframe["src"].replace("/preview", "")]
-                                quality = "HD"
-                            if match2:
-                                for link in match2:
-                                    # get base host (ex. www.google.com)
-                                    loc = urlparse.urlparse(link).netloc
-                                    loc_fragment = loc.split(".")[1:-1]
-                                    source_base = str.join(".",
-                                                           loc_fragment)
-                                    if "google" in source_base:
-                                        source_base = "google video"
-                                    link = link.replace('&amp;', "&")
-                                    self.sources.append(
-                                        {'source': source_base,
-                                         'quality': quality,
-                                         'scraper': self.name,
-                                         'url': link,
-                                         'direct': True})
-                return self.sources
+            start_url = self.base_link+'/searchaskforapi/?id=' + search_id
+            html = requests.get(start_url, headers=user_headers,timeout=10,verify=False).content
+            thumbs = re.compile('class="thumbnail">(.+?)</div>',re.DOTALL).findall(html)
+            thumb = re.compile('href="(.+?)".+?class="text-center text-bold">(.+?)</p>',re.DOTALL).findall(str(thumbs))
+            for url,link_title in thumb:
+                if '(' in link_title:
+                    pass
+                else:
+                    if title.lower() in link_title.lower():
+                        movie_link = self.base_link + url
+                        self.get_source(movie_link,episode=episode,season=season)
+            return self.sources
         except Exception, argument:
             return self.sources
+
+    def get_source(self,movie_link,episode=None,season=None):
+        html2 = requests.get(movie_link, verify=False).content
+        showid = re.findall('showid.attr\("value", (\d+)',str(html2))[0]
+        csrf = re.findall("var csrf =.+?value='(.+?)'",str(html2))[0]
+        h = requests.get(self.info_link+showid, verify=False).content
+        match = re.findall('"id":"(.+?)","title":"(.+?)"',h)
+        for epid,epname in match:
+            if episode != None:
+                if season != None:
+                    if len(season)==1:
+                        season = '0'+season
+                    if len(episode)==1:
+                        episode = '0'+episode
+                    if 'S'+season+'E'+episode not in epname:
+                        continue
+            print epname
+            headers = {"Referer": movie_link,
+                       "Cookie":"csrftoken=" + str(csrf)}
+            quality = re.findall("\[(.*?)\]", epname)
+            if not quality:
+                quality = "unknown"
+            else:
+                quality = quality[0]
+            data = {"epid": epid,"showid": showid,"epname": epname,"foo":"","csrfmiddlewaretoken":csrf}
+            html = requests.post(self.info_url,data=data,headers=headers,verify=False).text
+            getblock = re.findall('<div class="list-group">(.+?)</div>',html,re.DOTALL)
+            for block in getblock:
+                link_info_page = re.findall('<a href="(.+?)" class="list-group-item">\n(.+?)\(',str(block))
+                for url_,qual_check in link_info_page:
+                    if '1080p' in qual_check:
+                        quality = '1080p'
+                    elif '720p' in qual_check:
+                        quality = '720p'
+                    elif '360' in qual_check:
+                        quality = '360p'
+                    html_final = requests.get('https://moviegrabber.tv'+url_,verify=False).content
+                    playlink_list = re.compile('<source.+?src="(.+?)"',re.DOTALL).findall(html_final)
+                    for playlink in playlink_list:
+                        self.sources.append({'source': 'google video','quality': quality,'scraper': self.name,'url': playlink,'direct': True})
+                    try:
+                        end_url = re.compile('<iframe class.+?src="(.+?)"',re.DOTALL).findall(html_final)[0]
+                        playlink = end_url.replace('/preview','/edit')
+                        if 'google' in end_url:
+                            source = 'google video'
+                        else:
+                            source = 'moviegrabber'
+                        self.sources.append({'source': source,'quality': quality,'scraper': self.name,'url': playlink,'direct': True})
+                    except:
+                        pass

@@ -100,7 +100,7 @@ class Mfree(Scraper):
             servers = html.findAll("span", attrs={'class': re.compile(".*?btn-eps.*?")})
             for server in servers:
                 try:
-                    server_url = '/ajax-token-2.php?token=m4ufreeisthebest1&v=%s' % server["link"]
+                    server_url = '/ajax.php?token=m4ufreeisthebest1&data==%s' % server["link"]
                     server_url = urlparse.urljoin(self.base_link, server_url)
                     server_html = self.scraper.get(server_url, headers=headers, timeout=30).content
                     if '<h1> Plz visit m4ufree.info for this movie </h1>' in server_html:

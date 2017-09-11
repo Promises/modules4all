@@ -17,7 +17,8 @@ class Kingmovies(Scraper):
 
     def __init__(self):
         self.base_link = 'https://kingmovies.is'
-        self.api = 'https://api.streamdor.co/sources'
+        self.api = 'https://api.streamdor.co/sources.php'
+        self.token_url = 'https://embed.streamdor.co/token.php'
 
     def scrape_episode(self, title, show_year, year, season, episode, imdb, tvdb, debrid = False):
         try:
@@ -44,7 +45,7 @@ class Kingmovies(Scraper):
                                         for link in match3:
                                             if not link.startswith('http:'):
                                                 link = 'http:'+link
-                                            self.get_source(link)
+                                            self.get_source(link,url3)
             return self.sources
 
         except:
@@ -70,65 +71,76 @@ class Kingmovies(Scraper):
                         for link in match2:
                             if not link.startswith('http:'):
                                 link = 'http:'+link
-                            self.get_source(link)
-                            #loc = urlparse.urlparse(link).netloc  # get base host (ex. www.google.com)
-                            #source_base = str.join(".", loc.split(".")[1:-1])
-                            #self.sources.append({'source': source_base, 'quality': quality, 'scraper': self.name, 'url': link,'direct': True})
+                            self.get_source(link,url2)
             return self.sources
         except Exception as e:
             xbmc.log("e:" + repr(e))
             return self.sources
 
-    def get_source(self,link):
+    def get_source(self,link,url):
         try:
-            heads = {'User-Agent': random_agent()}
-            List = []
-            html3 = requests.get(link,headers=heads).content
-            match3 = re.compile('JuicyCodes.Run\((.+?)\);',re.DOTALL).findall(html3)
-            for i in match3:
-                single = re.compile('"(.+?)"').findall(str(i))
-                for s in single:
-                    List.append(s)
-                html2 = base64.decodestring(str(List).replace('[','').replace(']','').replace('\'','').replace(',','').replace(' ',''))
-                try:
-                    string= unpack(html2)
-                except:
-                    pass
-                ep_id = re.findall('"episodeID":"(.+?)"',string)[0]
-                ep_name = re.findall('"episodeName":"(.+?)"',string)[0]
-                ep_backup = re.findall('"episodeBackup":"(.+?)"',string)[0]
-                ep_hot = re.findall('"episodeHOT":(.+?),',string)[0]
-                File = re.findall('"file":"(.+?)"',string)[0]
-                headers = {"origin":"https://embed.streamdor.co",
-                           "referer":link,
-                           "user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"
-                           }
-
-                data = {"episodeID":ep_id,
-                        "episodeName":ep_name,
-                        "episodeBackup":ep_backup,
-                        "episodeHOT":ep_hot,
-                        "file":File
-                        }
-                response = requests.post(self.api,headers=headers,data=data).json()
-                results = []
-                results.extend([response["sources"]])
-                try:
-                    results.extend([response["sources_backup"]])
-                except:
-                    results = results
-                for result in results:
-                    if not result.startswith("http:"):
-                        result = "http:" + result
-                    response2 = requests.get(result).content
-                    m = re.compile('"file":"(.+?)".+?"label":"(.+?)"').findall(response2)
-                    for playlink,quality in m:
-                        playlink = playlink.replace('\\','')
-                        if '=m' in playlink:
-                            source = 'Gvideo'
-                        else:
-                            source = 'Streamdor'
-                        self.sources.append({'source': source, 'quality': quality, 'scraper': self.name, 'url': playlink,'direct': True})
+            quality = 'SD'
+            html = requests.get(url).content
+            qual = re.compile('"dcis">Quality: <span class="badge">(.+?)</span>').findall(html)
+            for q in qual:
+                quality = q
+            self.sources.append({'source': 'streamango', 'quality': quality, 'scraper': self.name, 'url': link,'direct': False})
         except:
             pass
-# Kingmovies()
+
+        
+#            heads = {'User-Agent': random_agent()}
+ #           List = []
+  #          html3 = requests.get(link,headers=heads).content
+   #         match3 = re.compile('JuicyCodes.Run\((.+?)\);',re.DOTALL).findall(html3)
+    #        for i in match3:
+     #           single = re.compile('"(.+?)"').findall(str(i))
+      #          for s in single:
+       #             List.append(s)
+        #        html2 = base64.decodestring(str(List).replace('[','').replace(']','').replace('\'','').replace(',','').replace(' ',''))
+         #       try:
+          #          string= unpack(html2)
+           #     except:
+            #        pass
+#
+ #               ep_id = re.findall('"episodeID":"(.+?)"',string)[0]
+  #              ep_name = re.findall('"episodeName":"(.+?)"',string)[0]
+   #             ep_backup = re.findall('"episodeBackup":"(.+?)"',string)[0]
+    #            ep_URL = re.findall('"episodeURL":"(.+?)",',string)[0]
+     #           ep_XID = re.findall('"episodeXID":"(.+?)"',string)[0]
+      #          headers = {
+       #                     'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36',
+        #                    'host':'api.streamdor.co',
+         #                   'referer':link,
+          #                  'origin':'https://embed.streamdor.co'
+           #                }
+#
+ #               t = requests.post(self.token_url,data={'id':ep_id}).content
+  #              Key,Token = re.findall('"key":"(.+?)","token":"(.+?)"',t)[0]
+   #             data = {
+    #                    'episodeID':ep_id,
+     #                   'episodeName':ep_name,
+      #                  'episodeBackup':ep_backup,
+       #                 'episodeURL':ep_URL,
+        #                'episodeXID':ep_XID,
+         #               'key':Key,
+          #              'token':Token
+           #             }
+            #    response = requests.post(self.api,headers=headers,data=data).json()
+             #   results = []
+              #  results.extend([response["sources"]])
+               # try:
+                #    results.extend([response["sources_backup"]])
+#                except:
+ #                   results = results
+  #              m = re.compile("'file'.+?'(.+?)'.+?'label'.+?'(.+?)'").findall(str(results))
+   #             for playlink,quality in m:
+    #                playlink = playlink.replace('\\','')
+     #               print playlink
+      #              if '=m' in playlink:
+       #                 source = 'Gvideo'
+        #            else:
+         #               source = 'Streamdor'
+          #          self.sources.append({'source': source, 'quality': quality, 'scraper': self.name, 'url': playlink,'direct': True})
+        #except:
+         #   pass

@@ -1,3 +1,11 @@
+v0.5.28
+- fixed m4u
+- fixed moviegrabber
+- fixed KingMovies
+- added 8 new scrapers
+- added 2 new Debrid scrapers
+- added 2 new music scrapers
+- Huge thank you to Origin, Apprentice, Dandy and everyone involved with NaN Scrapers
 v0.5.27
 - fix older kodi versions on android (no set compression on 2.6)
 v0.5.26
