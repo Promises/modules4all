@@ -29,9 +29,8 @@ class Movie321(Scraper):
                 host = host.split('/')[0].split('.')[0].title()
                 if 'streamango.com' in link:
                     holder = requests.get(link).content
-                    vid = re.compile('type:"video/mp4",src:"(.+?)",height:(.+?),',re.DOTALL).findall(holder)
-                    for url,qual in vid:
-                        self.sources.append({'source': host, 'quality': qual, 'scraper': self.name, 'url': 'http:'+url,'direct': True})            
+                    qual = re.compile('type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(holder)[0]
+                    self.sources.append({'source': host, 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})            
                 else:
                     self.sources.append({'source': host, 'quality': '720', 'scraper': self.name, 'url': link,'direct': False})
                                     
@@ -70,9 +69,8 @@ class Movie321(Scraper):
                 host = host.split('/')[0].split('.')[0].title()
                 if 'streamango.com' in link:
                     holder = requests.get(link).content
-                    vid = re.compile('type:"video/mp4",src:"(.+?)",height:(.+?),',re.DOTALL).findall(holder)
-                    for url,qual in vid:
-                        self.sources.append({'source': host, 'quality': qual, 'scraper': self.name, 'url': 'http:'+url,'direct': True})            
+                    qual = re.compile('type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(holder)[0]
+                    self.sources.append({'source': host, 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})              
                 else:
                     self.sources.append({'source': host, 'quality': '720', 'scraper': self.name, 'url': link,'direct': False})           
         except:

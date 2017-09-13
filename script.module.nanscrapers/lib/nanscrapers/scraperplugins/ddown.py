@@ -20,7 +20,9 @@ class ddown(Scraper):
             
 
     def scrape_episode(self,title, show_year, year, season, episode, imdb, tvdb, debrid = False):
-        try: 
+        try:            
+            if not debrid:
+                return [] 
             season_url = "0%s"%season if len(season)<2 else season
             episode_url = "0%s"%episode if len(episode)<2 else episode
 

@@ -36,13 +36,11 @@ class fullmovies24(Scraper):
         
                     content = requests.get(m_url,headers=headers).content
 
-                    frame = re.compile('<iframe src="(.+?)"',re.DOTALL).findall(content)[0]
-                    
-                    holder = requests.get(frame).content
-                    
-                    vid = re.compile('type:"video/mp4",src:"(.+?)",height:(.+?),',re.DOTALL).findall(holder)
-                    for url,qual in vid:
-                        self.sources.append({'source': 'Streamango', 'quality': qual, 'scraper': self.name, 'url': 'http:'+url,'direct': True})                   
+                    link = re.compile('<iframe src="(.+?)"',re.DOTALL).findall(content)[0]
+                    holder = requests.get(link).content
+                    print 'holder>'+holder
+                    qual = re.compile('type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(holder)[0]
+                    self.sources.append({'source': 'Streamango', 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})                   
             return self.sources
         except Exception, argument:
             return self.sources

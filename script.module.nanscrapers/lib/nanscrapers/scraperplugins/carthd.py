@@ -75,10 +75,9 @@ class carthd(Scraper):
                             elif 'googleapis' in source_base:
                                 self.sources.append({'source': 'GoogleLink','quality': '720P','scraper': self.name,'url': link,'direct': True})
                             elif 'streamango.com' in link:
-                                holder = requests.get(link).content
-                                vid = re.compile('type:"video/mp4",src:"(.+?)",height:(.+?),',re.DOTALL).findall(holder)
-                                for url,qual in vid:
-                                    self.sources.append({'source': source_base, 'quality': qual, 'scraper': self.name, 'url': 'http:'+url,'direct': True})
+                                get_res=requests.get(final_url,headers=headers,timeout=5).content
+                                qual = re.compile('{type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(get_res)[0]
+                                self.sources.append({'source': source_base, 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})
                             elif 'openload' in link:
                                 self.sources.append({'source': source_base,'quality': 'DVD','scraper': self.name,'url': link,'direct': False})
                             else:
@@ -148,10 +147,9 @@ class carthd(Scraper):
                         elif 'googleapis' in source_base:
                             self.sources.append({'source': 'GoogleLink','quality': '720P','scraper': self.name,'url': link,'direct': True})                        
                         elif 'streamango.com' in link:
-                            holder = requests.get(link).content
-                            vid = re.compile('type:"video/mp4",src:"(.+?)",height:(.+?),',re.DOTALL).findall(holder)
-                            for url,qual in vid:
-                                self.sources.append({'source': source_base, 'quality': qual, 'scraper': self.name, 'url': 'http:'+url,'direct': True})
+                            get_res=requests.get(final_url,headers=headers,timeout=5).content
+                            qual = re.compile('{type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(get_res)[0]
+                            self.sources.append({'source': source_base, 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})
                         elif 'openload' in link:
                             self.sources.append({'source': source_base,'quality': 'DVD','scraper': self.name,'url': link,'direct': False})
                         else:

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-	 <category label = "General">		<setting id="cache_enabled" type="bool" label="Enable Caching" default="true"/>	</category>	<category label="Scrapers 1">
+	 <category label = "General">
+		<setting id="cache_enabled" type="bool" label="Enable Caching" default="true"/>
+	</category>	<category label="Scrapers 1">
 		<setting label="123hulu" type="lsep"/>
 		<setting id="123hulu_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="123Movies" type="lsep"/>
@@ -10,8 +12,8 @@
 		<setting label="Alluc" type="lsep"/>
 		<setting id="Alluc_enabled" type="bool" label="Enabled" default="true"/>
 		<setting id="Alluc_max" type="slider" label="Max Results for Search" default="20" range="5,200" option="int"/>
-		<setting id= "Alluc_user" type="text" label="Username" default=Username />
-		<setting id= "Alluc_pw" type="text" label="Password" default=Password />
+		<setting id= "Alluc_user" type="text" label="Username" default="" />
+		<setting id= "Alluc_pw" type="text" label="Password" default="" />
 		<setting label="animetoon" type="lsep"/>
 		<setting id="animetoon_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="BeeMP3" type="lsep"/>
