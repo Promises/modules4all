@@ -26,7 +26,7 @@ class steamhdmovies(Scraper):
             
             form_data = {'cari':title.lower()}
             
-            html = requests.post(search_req, data=form_data,verify=False, headers=headers).content
+            html = requests.post(search_req, data=form_data,verify=False, headers=headers,timeout=5).content
 
             match = re.compile('<div class="box"><a href="(.+?)".+?alt="(.+?)".+?class="tahun">(.+?)</div>',re.DOTALL).findall(html)
             for link,name,date in match:

@@ -966,7 +966,7 @@ class PyJsParser:
 
     def createError(self, line, pos, description):
         self.log_err_case()
-        from js2py.base import ERRORS, Js, JsToPyException
+        from nanscrapers.modules.js2py.base import ERRORS, Js, JsToPyException
         error = ERRORS['SyntaxError']('Line ' + unicode(line) + ': ' + unicode(description))
         error.put('index',  Js(pos))
         error.put('lineNumber', Js(line))
@@ -1405,7 +1405,7 @@ class PyJsParser:
 
     def reinterpretExpressionAsPattern(self, expr):
         typ = (expr['type'])
-        if typ [Syntax.Identifier, Syntax.MemberExpression, Syntax.RestElement, Syntax.AssignmentPattern]:
+        if typ == Syntax.Identifier:
             pass
         elif typ == Syntax.SpreadElement:
             expr['type'] = Syntax.RestElement

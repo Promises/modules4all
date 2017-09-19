@@ -23,14 +23,14 @@ class flenix(Scraper):
             search_id = urllib.quote_plus(title.lower())
             movie_url = '%s/index.php?do=search&story=%s' %(self.base_link,search_id.replace(' ','+'))
             headers = {'User_Agent':User_Agent}
-            link = requests.get(movie_url,headers=headers,verify=False).content
+            link = requests.get(movie_url,headers=headers,verify=False,timeout=5).content
             results = re.compile('class="leftInfo".+?href="(.+?)">(.+?)</a></div>.+?Year:</li>.+?<li>(.+?)</li>',re.DOTALL).findall(link)
             for url,link_title,date in results:
                 if title.lower() in link_title.lower():
                     if date in year:
                         ID = url.split('movies/')[1].split('-')[0]
                         headers = {'User-Agent': User_Agent}
-                        page = requests.get(url,headers=headers,allow_redirects=False)
+                        page = requests.get(url,headers=headers,allow_redirects=False,timeout=5)
                         COOKIE = page.headers['Set-Cookie']
                         #print 'my cookie'+COOKIE
 

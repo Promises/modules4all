@@ -63,6 +63,7 @@ class onemovies(Scraper):
 
     def get_source(self,link,qual):
         try:
+            xbmc.log(link,xbmc.LOGNOTICE)
             qual = qual
             html = requests.get(link).content
             match = re.compile('load_player\((.+?)\)').findall(html)
@@ -85,6 +86,7 @@ class onemovies(Scraper):
                 results = response["playlist"]
                 for item in results:
                     playlink = item["file"]
+                    playlink = playlink+'|'+'User-Agent=Mozilla/5.0 (Windows NT 6.3; WOW64; rv:55.0) Gecko/20100101 Firefox/55.0&Host=s5.openstream.io&'+'Referer='+link
                     self.sources.append({'source': 'Gvideo', 'quality': qual, 'scraper': self.name, 'url': playlink,'direct': True})
         except:
             pass

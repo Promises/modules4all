@@ -1,5 +1,5 @@
 import json
-from js2py.base import Js
+from nanscrapers.modules.js2py.base import Js
 indent = ''
 # python 3 support
 import six

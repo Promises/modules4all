@@ -1,4 +1,4 @@
-from js2py.base import *
+from nanscrapers.modules.js2py.base import *
 
 @Js
 def console():

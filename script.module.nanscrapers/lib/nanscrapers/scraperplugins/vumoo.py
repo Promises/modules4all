@@ -39,10 +39,25 @@ class Vumoo(Scraper):
                                 for fin_link in url:
                                     if 'http' in fin_link:
                                         if 'openload' in fin_link:
-                                            self.sources.append({'source': 'openload', 'quality': 'unknown', 'scraper': self.name, 'url': fin_link,'direct': True})
+                                            try:
+                                                chk = requests.get(fin_link).content
+                                                rez = re.compile('"description" content="(.+?)"',re.DOTALL).findall(chk)[0]
+                                                if '1080' in rez:
+                                                    res='1080p'
+                                                elif '720' in rez:
+                                                    res='720p'
+                                                else:
+                                                    res ='DVD'
+                                            except: res = 'DVD'
+                                            self.sources.append({'source': 'Openload', 'quality': res, 'scraper': self.name, 'url': fin_link,'direct': False})
                                     elif 'api' in fin_link:
+                                        if '=1080' in fin_link:
+                                           res='1080p'
+                                        elif '=720' in fin_link:
+                                            res='720p'
+                                        else: res='SD'
                                         fin_link = self.base_link+fin_link
-                                        self.sources.append({'source': 'google video', 'quality': 'unknown', 'scraper': self.name, 'url': fin_link,'direct': True})
+                                        self.sources.append({'source': 'GoogleLink', 'quality': res, 'scraper': self.name, 'url': fin_link,'direct': True})
             return self.sources
 
         except:
@@ -105,13 +120,21 @@ class Vumoo(Scraper):
                 regex2 = re.compile('"src":"(.+?)","label":"(.+?)"',re.DOTALL).findall(links)
                 for url2,name2 in regex2:
                     url2=self.base_link+url2.replace('\\','')
-                    html = requests.get(url2).content
-                    self.sources.append({'source': 'google video', 'quality': name2, 'scraper': self.name, 'url': url2,'direct': True})
+                    self.sources.append({'source': 'GoogleLink', 'quality': name2, 'scraper': self.name, 'url': url2,'direct': True})
 
-                    addDir('[B][COLOR white]Play in %s[/COLOR][/B]'%name2,'http://vumoo.li%s'%url,100,iconimage,FANART,name)
             OLOAD = re.compile("var openloadLink = '(.+?)'",re.DOTALL).findall(OPEN)
             for url in OLOAD:
-                self.sources.append({'source': 'openload', 'quality': 'unknown', 'scraper': self.name, 'url': url,'direct': True})
+                try:
+                    chk = requests.get(url).content
+                    rez = re.compile('"description" content="(.+?)"',re.DOTALL).findall(chk)[0]
+                    if '1080' in rez:
+                        res='1080p'
+                    elif '720' in rez:
+                        res='720p'
+                    else:
+                        res ='DVD'
+                except: res = 'DVD'
+                self.sources.append({'source': 'openload', 'quality': res, 'scraper': self.name, 'url': url,'direct': False})
 
            
         except:

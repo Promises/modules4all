@@ -6,7 +6,6 @@ import os
 from requests.sessions import Session
 from nanscrapers.modules import js2py
 from copy import deepcopy
-
 try:
     from urlparse import urlparse
 except ImportError:
@@ -33,7 +32,7 @@ class CloudflareScraper(Session):
 
     def request(self, method, url, *args, **kwargs):
         resp = super(CloudflareScraper, self).request(method, url, *args, **kwargs)
-
+	
         # Check if Cloudflare anti-bot is on
         if resp.status_code == 503 and resp.headers.get("Server") == "cloudflare-nginx":
             return self.solve_cf_challenge(resp, **kwargs)
@@ -76,7 +75,6 @@ class CloudflareScraper(Session):
         # Safely evaluate the Javascript expression
         js = js.replace('return', '')
         params["jschl_answer"] = str(int(js2py.eval_js(js)) + len(domain))
-
         # Requests transforms any request into a GET after a redirect,
         # so the redirect has to be handled manually here to allow for
         # performing other types of requests even as the first request.
