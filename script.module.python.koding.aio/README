@@ -236,7 +236,7 @@ the db is a lot quicker there is no guarantee it won't cause
 severe problems in later versions of Kodi (this was created for v17).
 DO NOT set safe_mode to False unless you 100% understand the consequences!
 
-	CODE:  Toggle_Addons([addon, enable, safe_mode, exclude_list, new_only, refresh])
+	CODE:  Toggle_Addons([addon, enable, safe_mode, exclude_list, new_only, refresh, update_status])
 
 	AVAILABLE PARAMS:
 	    (*) addon  -  This can be a list of addon ids, one single id or
@@ -264,6 +264,13 @@ DO NOT set safe_mode to False unless you 100% understand the consequences!
 	    refresh  - By default this is set to True, it will refresh the
 	    current container and also force a local update on your add-ons db.
 
+	    update_status  - When running this function it needs to disable the
+	    auto-update of add-ons by Kodi otherwise it risks crashing. This
+	    update_status paramater is the state you want Kodi to revert back to
+	    once the toggle of add-ons has completed. By default this is set to 0
+	    which is auto-update. You can also choose 1 (notify of updates) or 2
+	    (disable auto updates).
+
 	EXAMPLE CODE:
 		from systemtools import Refresh
 		xbmc.executebuiltin('ActivateWindow(Videos, addons://sources/video/)')
@@ -281,7 +288,7 @@ DO NOT set safe_mode to False unless you 100% understand the consequences!
 ADULT TOGGLE:
 Remove/Enable a list of add-ons, these are put into a containment area until enabled again.
 
-CODE: Adult_Toggle(adult_list, [disable])
+CODE: Adult_Toggle(adult_list, [disable, update_status])
 
 AVAILABLE PARAMS:
             
@@ -289,6 +296,13 @@ AVAILABLE PARAMS:
 
     disable  -  By default this is set to true so any add-ons in the list sent
     through will be disabled. Set to False if you want to enable the hidden add-ons.
+
+    update_status  - When running this function it needs to disable the
+    auto-update of add-ons by Kodi otherwise it risks crashing. This
+    update_status paramater is the state you want Kodi to revert back to
+    once the toggle of add-ons has completed. By default this is set to 0
+    which is auto-update. You can also choose 1 (notify of updates) or 2
+    (disable auto updates).
 
 ------------------------------------------------------------------------------------------
 
@@ -816,9 +830,10 @@ This will allow the user to browse to a specific file and return the path.
 
 IMPORTANT: Do not confuse this with the Browse_To_Folder function
 
-	CODE: Browse_To_File([header, path, extension])
+	CODE: koding.Browse_To_File([header, path, extension, browse_in_archives])
 
 	AVAILABLE PARAMS:
+
 	    header    -  As the name suggests this is a string to be used for the header/title
 	    of the window. The default is "Select the file you want to use".
 
@@ -828,9 +843,16 @@ IMPORTANT: Do not confuse this with the Browse_To_Folder function
 	    extension -  Optionally set extensions to filter by, let's say you only wanted
 	    zip and txt files to show you would send through '.zip|.txt'
 
+	    browse_in_archives -  Set to true if you want to be able to browse inside zips and
+	    other archive files. By default this is set to False.
+
 	EXAMPLE CODE:
-		folder = koding.Browse_To_File(header='Choose a file you want to use', path='special://home/userdata')
-		dialog.ok('FOLDER DETAILS','Folder path: [COLOR=dodgerblue]%s[/COLOR]'%folder)
+		dialog.ok('[COLOR gold]BROWSE TO FILE 1[/COLOR]','We will now browse to your addons folder with browse_in_archives set to [COLOR dodgerblue]False[/COLOR]. Try clicking on a zip file if you can find one (check packages folder).')
+		folder = koding.Browse_To_File(header='Choose a file you want to use', path='special://home/addons')
+		dialog.ok('FOLDER DETAILS','File path: [COLOR=dodgerblue]%s[/COLOR]'%folder)
+		dialog.ok('[COLOR gold]BROWSE TO FILE 2[/COLOR]','We will now browse to your addons folder with browse_in_archives set to [COLOR dodgerblue]True[/COLOR]. Try clicking on a zip file if you can find one (check packages folder).')
+		folder = koding.Browse_To_File(header='Choose a file you want to use', path='special://home/addons', browse_in_archives=True)
+		dialog.ok('FOLDER DETAILS','File path: [COLOR=dodgerblue]%s[/COLOR]'%folder)
 
 ------------------------------------------------------------------------------------------
 
@@ -1133,6 +1155,77 @@ This will allow you to open a blank window and fill it with some text.
 
 ------------------------------------------------------------------------------------------
 
+UPDATE PROGRESS:
+This function is designed for skinners but can be used for general Python too. It will
+work out the current percentage of items that have been processed and update the
+"update_percent" property accordingly (1-100). You can also send through any properties
+you want updated and it will loop through updating them with the relevant values.
+
+To send through properties just send through the property name as the param and assign to a value.
+Example: Update_Progress( total_items=100,current_item=56, {"myproperty1":"test1","myproperty2":"test2"} )
+
+
+	CODE: Update_Progress(total_items,current_item,[kwargs])
+
+	AVAILABLE PARAMS:
+
+	    (*) total_items  -  Total amount of items in your list you're processing
+
+	    (*) current_item -  Current item number that's been processed.
+
+	    kwargs  -  Send through any other params and the respective property will be set.colours etc.
+
+------------------------------------------------------------------------------------------
+
+UPDATE SCREEN:
+This will create a full screen overlay showing progress of updates. You'll need to
+use this in conjunction with the Update_Progress function.
+
+
+	CODE: Update_Screen([disable_quit, auto_close))
+
+	AVAILABLE PARAMS:
+
+	    disable_quit  -  By default this is set to False and pressing the parent directory
+	    button (generally esc) will allow you to close the window. Setting this to True
+	    will mean it's not possible to close the window manually.
+
+	    auto_close  -  By default this is set to true and when the percentage hits 100
+	    the window will close. If you intend on then sending through some more commands
+	    you might want to consider leaving this window open in which case you'd set this
+	    to false. Bare in mind if you go this route the window will stay active until
+	    you send through the kill command which is: xbmc.executebuiltin('Action(firstpage)')
+
+	EXAMPLE CODE:
+	mykwargs = {
+	    "update_header"    : "Downloading latest updates",\
+	    "update_main_text" : "Your device is now downloading all the latest updates.\nThis shouldn\'t take too long, "\
+	                         "depending on your internet speed this could take anything from 2 to 10 minutes.\n\n"\
+	                         "Once downloaded the system will start to install the updates.",\
+	    "update_bar_color" : "4e91cf",\
+	    "update_icon"      : "special://home/addons/script.module.python.koding.aio/resources/skins/Default/media/update.png",\
+	    "update_spinner"   : "true"}
+	Update_Screen()
+	counter = 1
+	while counter <= 60:
+	    xbmc.sleep(300)
+	    Update_Progress(total_items=60,current_item=counter,**mykwargs)
+	    if counter == 30:
+	        mykwargs = {
+	            "update_header"        : "Halfway there!",\
+	            "update_main_text"     : "We just updated the properties to show how you can change things on the fly "\
+	                                     "simply by sending through some different properties. Both the icon and the "\
+	                                     "background images you see here are being pulled from online.",\
+	            "update_header_color"  : "4e91cf",\
+	            "update_percent_color" : "4e91cf",\
+	            "update_bar_color"     : "4e91cf",\
+	            "update_background"    : "http://www.planwallpaper.com/static/images/518164-backgrounds.jpg",\
+	            "update_icon"          : "http://totalrevolution.tv/img/tr_small_black_bg.jpg",\
+	            "update_spinner"       : "false"}
+	    counter += 1
+
+------------------------------------------------------------------------------------------
+
 YES/NO DIALOG:
 This will bring up a short text message in a dialog.yesno window. This will return True or False
 
@@ -1362,38 +1455,6 @@ F I L E   T O O L S
 
 ------------------------------------------------------------------------------------------
 
-ARCHIVE (CREATE A ZIP):
-Archive a folder path including all sub-folders. Optional exclude_dirs and exclude_files lists can be sent through and these will be skipped.
-
-IMPORTANT: There is a known bug where some certain compressed tar.gz files can cause the system to hang
-and a bad zipfile will continue to be made until it runs out of space on your storage device. In the unlikely
-event you encounter this issue just add the file(s) to your exclude list.
-
-	CODE: Archive_Tree(sourcefile, destfile, [exclude_dirs, exclude_files, message_header, message]):
-
-	AVAILABLE PARAMS:
-	    (*) sourcefile   - This is the source folder of where you want to start the archive process
-
-	    (*) destfile     - This is the file path you want to save the archive as (don't forget to add the actual filename at end of path)
-
-	    exclude_dirs   - This is optional, if you have folder names you want to exclude just add them here as a list item
-
-	    exclude_files  - This is optional, if you have specific file names you want to exclude just add them here as a list item
-
-	    message_header - This is optional, you can give the dialog progress window a title. The default is "ARCHIVING"
-
-	    message        - This is optional, the default text in the dialog progress window will be "Creating archive" unless changed here.
-
-
-	EXAMPLE CODE:
-		HOME = xbmc.translatePath('special://home')
-		DST = os.path.join(HOME,'test.zip')
-		koding.Archive_Tree(HOME, DST)
-		dialog.ok('[COLOR gold]ARCHIVE COMPLETE[/COLOR]','Congratulations your Kodi folder has been zipped up, you can find it in the following location:\n[COLOR dodgerblue]%s[/COLOR]'%DST)
-
-
-------------------------------------------------------------------------------------------
-
 CLEAN CACHED IMAGES:
 This will check for any cached artwork and wipe if it's not been accessed more than 10 times in the past x amount of days.
 
@@ -1415,8 +1476,15 @@ This will check for any cached artwork and wipe if it's not been accessed more t
 ------------------------------------------------------------------------------------------
 
 COMPRESS FILES:
-Compress files in either zip or tar format. This will most likely be replacing Archive_Tree longer term
-as this has better functionality but it's currently missing the custom message and exclude files options.
+Compress files in either zip or tar format. This will most likely be replacing
+Archive_Tree longer term as this has better functionality but it's currently
+missing the custom message and exclude files options.
+
+IMPORTANT: There was a known bug where some certain compressed tar.gz files can cause the system to hang
+and a bad zipfile will continue to be made until it runs out of space on your storage device. In the unlikely
+event you encounter this issue just add the problematic file(s) to your exclude list. I think this has since
+been fixed since a complete re-code to this function, or at least I've been unable to recreate it. If you
+find this problem is still occuring please let me know (whufclee on noobsandnerds.com forum), thankyou.
 
 	CODE: Compress(src,dst,[compression,parent])
 
@@ -1432,6 +1500,17 @@ as this has better functionality but it's currently missing the custom message a
 	    everything inside the path given. If set to True it will do the same but
 	    it will include the parent folder name - ideal if you want to zip up
 	    an add-on folder and be able to install via Kodi Settings.
+
+	    exclude_dirs   - This is optional, if you have folder names you want to exclude just
+	    add them here as a list item. By default the folder 'temp' is added to this list so
+	    if you need to include folders called temp make sure you send through a list, even
+	    if it's an empty one. The reason for leaving temp out is that's where Kodi logfiles
+	    and crashlogs are stored on a lot of devices and these are generally not needed in
+	    backup zips.
+
+	    exclude_files  - This is optional, if you have specific file names you want to
+	    exclude just add them here as a list item. By default the list consists of:
+	    'kodi.log','kodi.old.log','xbmc.log','xbmc.old.log','spmc.log','spmc.old.log'
 
 	EXAMPLE CODE:
 		koding_path = xbmc.translatePath('special://home/addons/script.module.python.koding.aio')

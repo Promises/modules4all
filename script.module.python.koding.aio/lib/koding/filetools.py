@@ -21,6 +21,7 @@ import os
 import shutil
 import sys
 import xbmc
+import xbmcaddon
 import xbmcgui
 
 from systemtools import Last_Error
@@ -31,109 +32,22 @@ HOME     = xbmc.translatePath('special://home')
 PROFILE  = xbmc.translatePath('special://profile')
 DATABASE = os.path.join(PROFILE,'Database')
 #----------------------------------------------------------------    
-# TUTORIAL #
+# Legacy code, now use new function Compress
 def Archive_Tree(sourcefile, destfile, exclude_dirs=['temp'], exclude_files=['kodi.log','kodi.old.log','xbmc.log','xbmc.old.log','spmc.log','spmc.old.log'], message_header = 'ARCHIVING', message = 'Creating archive'):
-    """
-Archive a folder path including all sub-folders.
-There is a good chance this will be depreciated and merged with the Compress function
-in future. We will continue to keep this working but just a heads up the features in this
-such as custom messages will more than likely get ported into the Compress function at
-a later date so it may we worth using that as that has better functionality.
-
-Optional exclude_dirs and exclude_files lists can be sent through and these will be skipped
-
-IMPORTANT: There is a known bug where some certain compressed tar.gz files
-can cause the system to hang and a bad zipfile will continue to be made until
-it runs out of space on your storage device. In the unlikely event you encounter
-this issue just add the file(s) to your exclude list.
-
-CODE: Archive_Tree(sourcefile, destfile, [exclude_dirs, exclude_files, message_header, message]):
-
-AVAILABLE PARAMS:
-
-    (*) sourcefile   - This is the source folder of where you want to start the archive process
-
-    (*) destfile     - This is the file path you want to save the archive as (don't forget to
-    add the actual filename at end of path)
-
-    exclude_dirs   - This is optional, if you have folder names you want to exclude just
-    add them here as a list item
-
-    exclude_files  - This is optional, if you have specific file names you want to
-    exclude just add them here as a list item
-
-    message_header - This is optional, you can give the dialog progress window a title.
-    The default is "ARCHIVING"
-
-    message        - This is optional, the default text in the dialog progress window
-    will be "Creating archive" unless changed here.
-
-EXAMPLE CODE:
-HOME = xbmc.translatePath('special://home')
-DST = os.path.join(HOME,'test.zip')
-koding.Archive_Tree(HOME, DST)
-dialog.ok('[COLOR gold]ARCHIVE COMPLETE[/COLOR]','Congratulations your Kodi folder has been zipped up, you can find it in the following location:\n[COLOR dodgerblue]%s[/COLOR]'%DST)
-~"""
-    import zipfile
-    import time
-    import xbmcaddon
-    xbmc.log('ARCHIVE IN PROGRESS',2)
-    module_id        =  'script.module.python.koding.aio'
-    this_module      =  xbmcaddon.Addon(id=module_id)
-    folder_size      =  Folder_Size(sourcefile,'mb')
-    available_space  =  Free_Space(HOME,'mb')
-    if os.path.exists(sourcefile):
-        choice = True
-        if float(available_space) < float(folder_size):
-            choice = dialog.yesno(this_module.getLocalizedString(30809), this_module.getLocalizedString(30810), this_module.getLocalizedString(30811) % folder_size, this_module.getLocalizedString(30812) % available_space, yeslabel = this_module.getLocalizedString(30813), nolabel = this_module.getLocalizedString(30814))
-        if choice:
-            zipobj       = zipfile.ZipFile(destfile , 'w', zipfile.ZIP_DEFLATED)
-            rootlen      = len(sourcefile)
-            for_progress = []
-            contents     = []
-            
-            dp.create(message_header, message)
-
-            for base, dirs, files in os.walk(sourcefile):
-                for file in files:
-                    contents.append(file)
-            total_items =len(contents)
-            
-            for base, dirs, files in os.walk(sourcefile):
-                dirs[:] = [d for d in dirs if d not in exclude_dirs]
-                files[:] = [f for f in files if f not in exclude_files and not 'crashlog' in f and not 'stacktrace' in f]
-                
-                for file in files:
-                    try:
-                        for_progress.append(file) 
-                        progress = len(for_progress) / float(total_items) * 100  
-                        dp.update(0,"Backing Up",'[COLOR yellow]%s[/COLOR]'%d, 'Please Wait')
-                        file_path = os.path.join(base, file)
-                    except:
-                        pass
-                    try:
-                        timestamp_1980 = 315532800
-                        file_date = os.path.getmtime(file_path)                    
-                        if file_date < timestamp_1980:
-                            xbmc.log('OLD File date: %s'%file_date, 2)
-                            os.utime(file_path,(315536400, 315536400))
-                        zipobj.write(file_path, file_path[rootlen:])  
-                    except:
-                        xbmc.log('Failed to backup: %s'%file_path, 2)
-
-                    if dp.iscanceled():
-                        sys.exit()
-            zipobj.close()
-            dp.close()
-    else:
-        dialog.ok(this_module.getLocalizedString(30965),this_module.getLocalizedString(30815) % sourcefile)
+    Compress(src=sourcefile, dst=destfile, exclude_dirs=exclude_dirs, exclude_files=exclude_files)
 #----------------------------------------------------------------    
 # TUTORIAL #
-def Compress(src,dst,compression='zip',parent=False):
+def Compress(src,dst,compression='zip',parent=False, exclude_dirs=['temp'], exclude_files=['kodi.log','kodi.old.log','xbmc.log','xbmc.old.log','spmc.log','spmc.old.log'], message_header = 'ARCHIVING', message = 'Creating archive'):
     """
 Compress files in either zip or tar format. This will most likely be replacing
 Archive_Tree longer term as this has better functionality but it's currently
 missing the custom message and exclude files options.
+
+IMPORTANT: There was a known bug where some certain compressed tar.gz files can cause the system to hang
+and a bad zipfile will continue to be made until it runs out of space on your storage device. In the unlikely
+event you encounter this issue just add the problematic file(s) to your exclude list. I think this has since
+been fixed since a complete re-code to this function, or at least I've been unable to recreate it. If you
+find this problem is still occuring please let me know (whufclee on noobsandnerds.com forum), thankyou.
 
 CODE: Compress(src,dst,[compression,parent])
 
@@ -150,6 +64,17 @@ AVAILABLE PARAMS:
     it will include the parent folder name - ideal if you want to zip up
     an add-on folder and be able to install via Kodi Settings.
 
+    exclude_dirs   - This is optional, if you have folder names you want to exclude just
+    add them here as a list item. By default the folder 'temp' is added to this list so
+    if you need to include folders called temp make sure you send through a list, even
+    if it's an empty one. The reason for leaving temp out is that's where Kodi logfiles
+    and crashlogs are stored on a lot of devices and these are generally not needed in
+    backup zips.
+
+    exclude_files  - This is optional, if you have specific file names you want to
+    exclude just add them here as a list item. By default the list consists of:
+    'kodi.log','kodi.old.log','xbmc.log','xbmc.old.log','spmc.log','spmc.old.log'
+
 EXAMPLE CODE:
 koding_path = xbmc.translatePath('special://home/addons/script.module.python.koding.aio')
 zip_dest = xbmc.translatePath('special://home/test_addon.zip')
@@ -162,37 +87,49 @@ koding.Compress(src=koding_path,dst=tar_dest,compression='tar',parent=True)
 koding.Compress(src=koding_path,dst=tar_dest2,compression='tar',parent=False)
 koding.Text_Box('CHECK HOME FOLDER','If you check your Kodi home folder you should now have 4 different compressed versions of the Python Koding add-on.\n\ntest_addon.zip: This has been zipped up with parent set to True\n\ntest_addon2.zip: This has been zipped up with parent set to False.\n\ntest_addon.tar: This has been compressed using tar format and parent set to True\n\ntest_addon2.tar: This has been compressed using tar format and parent set to False.\n\nFeel free to manually delete these.')
 ~"""
-    if parent:
-        import zipfile
-        import tarfile
-        directory = os.path.dirname(dst)
-        if not os.path.exists(directory):
-            try:
-                os.makedirs(directory)
-            except:
-                dialog.ok('ERROR','The destination directory you gave does not exist and it wasn\'t possible to create it.')
-                return
-        if compression == 'zip':
-            zip = zipfile.ZipFile(dst, 'w', compression=zipfile.ZIP_DEFLATED)
-        elif compression == 'tar':
-            zip = tarfile.open(dst, mode='w')
-        root_len = len(os.path.dirname(os.path.abspath(src)))
-        for root, dirs, files in os.walk(src):
-            archive_root = os.path.abspath(root)[root_len:]
+    import zipfile
+    import tarfile
+    directory = os.path.dirname(dst)
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+        except:
+            dialog.ok('ERROR','The destination directory you gave does not exist and it wasn\'t possible to create it.')
+            return
+    if compression == 'zip':
+        zip = zipfile.ZipFile(dst, 'w', compression=zipfile.ZIP_DEFLATED)
+    elif compression == 'tar':
+        zip = tarfile.open(dst, mode='w')
+    module_id        =  'script.module.python.koding.aio'
+    this_module      =  xbmcaddon.Addon(id=module_id)
+    folder_size      =  Folder_Size(src,'mb')
+    available_space  =  Free_Space(HOME,'mb')
+    if os.path.exists(src):
+        choice = True
+        if float(available_space) < float(folder_size):
+            choice = dialog.yesno(this_module.getLocalizedString(30809), this_module.getLocalizedString(30810), this_module.getLocalizedString(30811) % folder_size, this_module.getLocalizedString(30812) % available_space, yeslabel = this_module.getLocalizedString(30813), nolabel = this_module.getLocalizedString(30814))
+        if choice:
+            root_len = len(os.path.dirname(os.path.abspath(src)))
+            for base, dirs, files in os.walk(src):
+                dirs[:]  = [d for d in dirs if d not in exclude_dirs]
+                files[:] = [f for f in files if f not in exclude_files and not 'crashlog' in f and not 'stacktrace' in f]
+                archive_root = os.path.abspath(base)[root_len:]
 
-            for f in files:
-                    fullpath = os.path.join(root, f)
-                    archive_name = os.path.join(archive_root, f)
-                    if compression == 'zip':
-                        zip.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
-                    elif compression == 'tar':
-                        zip.add(fullpath, archive_name)
-        zip.close()
-    else:
-        if compression == 'zip':
-            shutil.make_archive(dst.replace('.zip',''), 'zip', src)
-        elif compression == 'tar':
-            shutil.make_archive(dst.replace('.tar',''), 'tar', src)
+                for f in files:
+                    fullpath = os.path.join(base, f)
+                    if parent:
+                        archive_name = os.path.join(archive_root, f)
+                        if compression == 'zip':
+                            zip.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+                        elif compression == 'tar':
+                            zip.add(fullpath, archive_name)
+                    else:
+                        newpath = fullpath.split(src)[1]
+                        if compression == 'zip':
+                            zip.write(fullpath, newpath, zipfile.ZIP_DEFLATED)
+                        elif compression == 'tar':
+                            zip.add(fullpath, newpath)
+            zip.close()
 #----------------------------------------------------------------    
 # TUTORIAL #
 def Create_Paths(path=''):

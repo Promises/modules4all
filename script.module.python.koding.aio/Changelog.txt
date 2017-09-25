@@ -1,3 +1,34 @@
+v.0.9.8.4:
+- Re-done the Compress function as shutil.make_archive doesn't work on python 2.6 so now using tarfile and zipfile.
+
+v.0.9.8.3:
+- Added option to browse into zips when using Browse_To_File, default is False
+- Fixed the update spinner in Update Screen, wasn't able to disable
+- Fixed alignment of text in Update Screen, was showing oddly on some skins
+
+v.0.9.8.2:
+- Edited update_screen alignment for text
+
+v.0.9.8.1:
+- Edited adult toggle to use safe mode and toggle all at once rather than one by one
+- Adult_Toggle now requires an update_status to be sent through, if nothing sent through the default status will be set to auto-update once function is complete.
+
+v.0.9.8.0:
+- Browse_To_Folder no longer shows contents of archives
+
+v.0.9.7.9:
+- Removed dolog import from video.py as was causing problems
+- Fixed profile_path in database.py
+
+v.0.9.7.8:
+- Added Reset_Percent function
+- Fixed bug in database module, Addon ID was not being called correctly.
+- Added extra debugging notifications for add-on install
+- Disable/enable auto add-on updates in add-on install at start/end
+
+v.0.9.7.7:
+- Added timeout checker for Download function, especially useful on older installs which do not support SSL as it was previously waiting 30s before finally giving up.
+
 v.0.9.7.6:
 - Added Update_Screen function
 - Improved Update_Progress function

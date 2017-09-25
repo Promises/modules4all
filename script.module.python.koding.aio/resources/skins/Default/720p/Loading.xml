@@ -32,7 +32,7 @@
 			<height>50</height>
 			<align>center</align>
 			<aligny>center</aligny>
-			<font>font14_title</font>
+			<font>font13</font>
 			<label>Status: $INFO[Window(Home).Property(update_percent)] %</label>
 			<textcolor>$INFO[Window(Home).Property(update_percent_color)]</textcolor>
 			<visible>!IsEmpty(Window(Home).Property(update_percent))</visible>
@@ -847,24 +847,26 @@
 		</control>
 		<control type="label">
 			<description>update header</description>
-			<posx>500</posx>
-			<posy>150</posy>
+			<left>500</left>
+			<top>150</top>
 			<width>550</width>
 			<height>300</height>
-			<font>font14</font>
+			<font>font13</font>
 			<label>$INFO[Window(Home).Property(update_header)]</label>
 			<align>left</align>
+			<aligny>top</aligny>
 			<textcolor>$INFO[Window(Home).Property(update_header_color)]</textcolor>
 		</control>
 		<control type="label">
 			<description>update text</description>
-			<posx>500</posx>
-			<posy>200</posy>
+			<left>500</left>
+			<top>200</top>
 			<width>550</width>
 			<height>300</height>
-			<font>font13_title</font>
+			<font>font13</font>
 			<label>$INFO[Window(Home).Property(update_main_text)]</label>
 			<align>left</align>
+			<aligny>top</aligny>
 			<wrapmultiline>true</wrapmultiline>
 			<textcolor>$INFO[Window(Home).Property(update_main_color)]</textcolor>
 		</control>

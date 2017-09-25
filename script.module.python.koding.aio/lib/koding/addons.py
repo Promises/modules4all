@@ -312,11 +312,11 @@ else:
         ADDON.setSetting(id=setting, value=value)
 #----------------------------------------------------------------
 # TUTORIAL #
-def Adult_Toggle(adult_list=[],disable=True):
+def Adult_Toggle(adult_list=[], disable=True, update_status=0):
     """
 Remove/Enable a list of add-ons, these are put into a containment area until enabled again.
 
-CODE: Adult_Toggle(adult_list, [disable])
+CODE: Adult_Toggle(adult_list, [disable, update_status])
 
 AVAILABLE PARAMS:
             
@@ -324,10 +324,19 @@ AVAILABLE PARAMS:
 
     disable  -  By default this is set to true so any add-ons in the list sent
     through will be disabled. Set to False if you want to enable the hidden add-ons.
+
+    update_status  - When running this function it needs to disable the
+    auto-update of add-ons by Kodi otherwise it risks crashing. This
+    update_status paramater is the state you want Kodi to revert back to
+    once the toggle of add-ons has completed. By default this is set to 0
+    which is auto-update. You can also choose 1 (notify of updates) or 2
+    (disable auto updates).
+
 ~"""
     from filetools   import Move_Tree, End_Path
 
-    adult_store = xbmc.translatePath("special://profile/addon_data/script.module.python.koding.aio/adult_store")
+    adult_store  = xbmc.translatePath("special://profile/addon_data/script.module.python.koding.aio/adult_store")
+    disable_list = []
     if not os.path.exists(adult_store):
         os.makedirs(adult_store)
     my_addons = Installed_Addons()
@@ -336,14 +345,17 @@ AVAILABLE PARAMS:
             if item != None:
                 item = item["addonid"]
                 if item in adult_list:
-                    try:
-                        addon_path = xbmcaddon.Addon(id=item).getAddonInfo("path")
-                    except:
-                        addon_path = os.path.join(ADDONS,item)
-                    Toggle_Addons(addon=item, enable=False, safe_mode=False, refresh=True)
-                    path_id = End_Path(addon_path)
-                    if os.path.exists(addon_path):
-                        Move_Tree(addon_path,os.path.join(adult_store,path_id))
+                    disable_list.append(item)
+
+        Toggle_Addons(addon=disable_list, enable=False, safe_mode=True, refresh=True, update_status=update_status)
+        for item in disable_list:
+            try:
+                addon_path = xbmcaddon.Addon(id=item).getAddonInfo("path")
+            except:
+                addon_path = os.path.join(ADDONS,item)
+            path_id = End_Path(addon_path)
+            if os.path.exists(addon_path):
+                Move_Tree(addon_path,os.path.join(adult_store,path_id))
     else:
         KODI_VER    = int(float(xbmc.getInfoLabel("System.BuildVersion")[:2]))
         addon_vault = []
@@ -355,7 +367,7 @@ AVAILABLE PARAMS:
                     Move_Tree(store_dir,addon_dir)
                     addon_vault.append(item)
         if KODI_VER >= 16:
-            Toggle_Addons(addon=addon_vault, safe_mode=True, refresh=True)
+            Toggle_Addons(addon=addon_vault, safe_mode=True, refresh=True, update_status=update_status)
         else:
             Refresh(['addons','repos'])
 #----------------------------------------------------------------
@@ -778,7 +790,7 @@ else:
             pass
 #----------------------------------------------------------------
 # TUTORIAL #
-def Toggle_Addons(addon='all', enable=True, safe_mode=True, exclude_list=[], new_only=True, refresh=True):
+def Toggle_Addons(addon='all', enable=True, safe_mode=True, exclude_list=[], new_only=True, refresh=True, update_status=0):
     """
 Send through either a list of add-on ids or one single add-on id.
 The add-ons sent through will then be added to the addons*.db
@@ -818,6 +830,13 @@ AVAILABLE PARAMS:
     refresh  - By default this is set to True, it will refresh the
     current container and also force a local update on your add-ons db.
 
+    update_status  - When running this function it needs to disable the
+    auto-update of add-ons by Kodi otherwise it risks crashing. This
+    update_status paramater is the state you want Kodi to revert back to
+    once the toggle of add-ons has completed. By default this is set to 0
+    which is auto-update. You can also choose 1 (notify of updates) or 2
+    (disable auto updates).
+
 EXAMPLE CODE:
 from systemtools import Refresh
 xbmc.executebuiltin('ActivateWindow(Videos, addons://sources/video/)')
@@ -835,6 +854,8 @@ koding.Refresh('container')
     from database       import DB_Query
     from systemtools    import Data_Type, Last_Error, Refresh, Set_Setting, Sleep_If_Function_Active, Timestamp
 
+    Set_Setting('general.addonupdates', 'kodi_setting', '2')
+    dolog('disabled auto updates for add-ons')
     kodi_ver        = int(float(xbmc.getInfoLabel("System.BuildVersion")[:2]))
     addons_db       = DB_Path_Check('addons')
     data_type       = Data_Type(addon)
@@ -940,9 +961,13 @@ koding.Refresh('container')
     # Now the dependencies are enabled we need to enable the actual main add-ons
         for my_addon in final_addons:
             if not my_addon in final_enabled:
+                dolog('Attempting to enable: %s'%my_addon)
                 if Set_Setting(setting_type='addon_enable', setting=my_addon, value = my_value):
                     dolog('%s now %s' % (my_addon, log_value))
                     final_enabled.append(addon)
+            else:
+                dolog('Already enabled, skipping: %s'%my_addon)
     if refresh:
         Refresh(['addons','container'])
+    Set_Setting('general.addonupdates', 'kodi_setting', '%s'%update_status)
 #----------------------------------------------------------------

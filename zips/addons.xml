@@ -15,21 +15,6 @@
 	</extension>
 </addon>
 
-<addon id="script.module.liveresolver" name="LiveResolver" version="0.1.49" provider-name="natko1412">
-	<requires>
-		<import addon="xbmc.python" version="2.1.0"/>
-		<import addon="script.module.beautifulsoup" version="3.2.1"/>
-		<import addon="script.module.requests"/>
-		<import addon="script.module.addon.common" version="2.0.0"/>
-	</requires>
-	<extension point="xbmc.python.module" library="lib"/>
-	<extension point="xbmc.addon.metadata">
-		<platform>all</platform>
-		<summary lang="en">Resolve common live video host URL's to be playable in XBMC/Kodi + find links embeded in sites.</summary>
-		<description lang="en"></description>
-	</extension>
-</addon>
-
 <addon id="script.module.nanscrapers" name="NaN Scrapers" version="0.5.30" provider-name="Team NaN">
         <requires>
                 <import addon="xbmc.python" version="2.1.0"/>
@@ -58,7 +43,7 @@
 
 <addon id="script.module.python.koding.aio"
    name="Python Koding AIO"
-   version="0.9.7.6"
+   version="0.9.8.4"
    provider-name="Total Revolution, noobsandnerds">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
@@ -91,21 +76,6 @@
 		<platform>all</platform>
 		<license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
 		<source>https://github.com/Twilight0/script.module.tulip</source>
-	</extension>
-</addon>
-
-<addon id="script.module.urlresolver" name="URLResolver" version="3.0.32" provider-name="tvaddons.ag, Eldorado">
-	<requires>
-		<import addon="xbmc.python" version="2.1.0"/>
-		<import addon="plugin.video.youtube" optional="true"/>
-		<import addon="script.module.python.twitch" optional="true"/>
-	</requires>
-	<extension point="xbmc.python.module" library="lib"/>
-	<extension point="xbmc.python.pluginsource" library="lib/default.py"/>
-	<extension point="xbmc.addon.metadata">
-		<platform>all</platform>
-		<summary lang="en">Resolve common video host URL's to be playable in XBMC/Kodi.</summary>
-		<description lang="en">Resolve common video host URL's to be playable in XBMC/Kodi, simplify addon development of video plugins requiring multi video hosts.</description>
 	</extension>
 </addon>
 
