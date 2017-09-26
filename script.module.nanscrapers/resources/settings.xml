@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
 	 <category label = "General">		<setting id="cache_enabled" type="bool" label="Enable Caching" default="true"/>	</category>	<category label="Scrapers 1">
-		<setting label="123hulu" type="lsep"/>
-		<setting id="123hulu_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="123Movies" type="lsep"/>
 		<setting id="123Movies_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="1movies" type="lsep"/>
@@ -49,6 +47,8 @@
 		<setting label="primewire" type="lsep"/>
 		<setting id="primewire_enabled" type="bool" label="Enabled" default="true"/>
 		<setting id= "primewire_baseurl" type="text" label="Base Url" default="http://www.primewire.ag"/>
+		<setting label="ProjectFree" type="lsep"/>
+		<setting id="ProjectFree_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="Releasebb" type="lsep"/>
 		<setting id="Releasebb_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="rlshd" type="lsep"/>
@@ -59,6 +59,10 @@
 		<setting id="sceper_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="SteamHD" type="lsep"/>
 		<setting id="SteamHD_enabled" type="bool" label="Enabled" default="true"/>
+		<setting label="streamdreams" type="lsep"/>
+		<setting id="streamdreams_enabled" type="bool" label="Enabled" default="true"/>
+		<setting label="thewatchseries" type="lsep"/>
+		<setting id="thewatchseries_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="toonova" type="lsep"/>
 		<setting id="toonova_enabled" type="bool" label="Enabled" default="true"/>
 		<setting label="TVRelease" type="lsep"/>
