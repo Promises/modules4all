@@ -1,3 +1,7 @@
+v.0.9.8.6:
+- Improved Fresh_Install function, now multi-platform and can add paths/addons to ignore
+- Fixed the Delete_Folders function, was removing sub-folders from items in ignore list
+
 v.0.9.8.4:
 - Re-done the Compress function as shutil.make_archive doesn't work on python 2.6 so now using tarfile and zipfile.
 

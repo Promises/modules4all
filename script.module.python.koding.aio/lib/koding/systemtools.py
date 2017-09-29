@@ -93,7 +93,7 @@ koding.Cleanup_Textures(frequency=5)
         try:
             os.remove(path)
         except:
-            kodi.log(Last_Error())
+            xbmc.log(Last_Error())
 #----------------------------------------------------------------
 # TUTORIAL #
 def Clear_Data(addonid):

@@ -279,9 +279,9 @@ koding.Delete_Files(filepath=delete_path, filetype='.txt', subdirectories=True)
                     try:
                         os.remove(delete_path)
                     except:
-                        kodi.log(Last_Error())
+                        xbmc.log(Last_Error(),2)
     else:
-        xbmc.log('### Cannot delete files as directory does not exist: %s' % filepath)
+        xbmc.log('### Cannot delete files as directory does not exist: %s' % filepath,2)
 #----------------------------------------------------------------
 # TUTORIAL #
 def Delete_Folders(filepath='', ignore=[]):
@@ -334,20 +334,26 @@ if dialog.yesno('[COLOR gold]DELETE FOLDER[/COLOR]','Everything except file1.txt
 # If there's some ignore files we run through deleting everything but those files
     elif len(ignore) > 0:
         for root, dirs, files in os.walk(filepath, topdown=False):
+            cont = True
             if not root in ignore:
-                for file in files:
-                    file_path = os.path.join(root,file)
-                    if file_path not in ignore:
+                for item in ignore:
+                    if item in root:
+                        cont=False
+                        break
+                if cont:
+                    for file in files:
+                        file_path = os.path.join(root,file)
+                        if file_path not in ignore:
+                            try:
+                                os.remove(file_path)
+                            except:
+                                pass
+
+                    if len(os.listdir(root)) == 0:
                         try:
-                            os.remove(file_path)
+                            os.rmdir(root)
                         except:
                             pass
-
-                if len(os.listdir(root)) == 0:
-                    try:
-                        os.rmdir(root)
-                    except:
-                        pass
 
 # If a simple complete wipe of a directory and all sub-directories is required we use this
     elif os.path.exists(filepath) and filepath != '':
@@ -503,14 +509,14 @@ else:
                     return True
 
                 except:
-                    xbmc.log(Last_Error())
+                    xbmc.log(Last_Error(),2)
                     return False
             else:
                 try:
                     zin.extractall(_out)
                     return True
                 except:
-                    xbmc.log(Last_Error())
+                    xbmc.log(Last_Error(),2)
                     return False
         
         else:
@@ -518,34 +524,6 @@ else:
     else:
         if show_error:
             dialog.ok(this_module.getLocalizedString(30965),this_module.getLocalizedString(30815) % _in)
-#----------------------------------------------------------------
-# TUTORIAL #
-def Fresh_Install():
-    """
-Attempt to completely wipe your install. Currently this only supports
-LE/OE/Android. On LE/OE it will perform a hard reset and on Android it
-will wipe the data for the current running app (untested)
-
-CODE:  Fresh_Install()
-
-EXAMPLE CODE:
-if dialog.yesno('TOTAL WIPEOUT!','This will attempt give you a totally fresh install of Kodi.','Are you sure you want to continue?'):
-    if dialog.yesno('[COLOR=gold]FINAL CHANCE!!![/COLOR]','If you click Yes this WILL attempt to wipe your install', '[COLOR=dodgerblue]ARE YOU 100% CERTAIN YOU WANT TO WIPE?[/COLOR]'):
-        clean_state = koding.Fresh_Install()
-        if not clean_state:
-            dialog.ok('SYSTEM NOT SUPPORTED','Your platform is not yet supported by this function, you will have to manually wipe.')
-~"""
-    from systemtools import Running_App, Get_ID
-    if xbmc.getCondVisibility("System.HasAddon(service.libreelec.settings)") or xbmc.getCondVisibility("System.HasAddon(service.openelec.settings)"):
-        resetpath='storage/.cache/reset_oe'
-        Text_File(resetpath,'w')
-        xbmc.executebuiltin('reboot')
-    elif xbmc.getCondVisibility('System.Platform.Android'):
-        import subprocess
-        running   = Running_App()
-        cleanwipe = subprocess.Popen(['exec ''pm clear '+str(running)+''], executable='/system/bin/sh', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=Get_ID(setid=True)).communicate()[0]
-    else:
-        return False
 #----------------------------------------------------------------
 # TUTORIAL #
 def Free_Space(dirname = HOME, filesize = 'b'):
@@ -640,6 +618,104 @@ dialog.ok('Folder Size','KODI HOME: %s MB' % home_size)
         return "%.3f" % (float(finalsize / 1024) / 1024 / 1024)
     elif filesize == 'tb':
         return "%.4f" % (float(finalsize / 1024) / 1024 / 1024 / 1024)
+#----------------------------------------------------------------
+# TUTORIAL #
+def Fresh_Install(keep_addons=[],ignore=[],keepdb=True):
+    """
+Attempt to completely wipe your install. You can send through a list
+of addons or paths you want to ignore (leave in the setup) or you can
+leave blank. If left blank and the platform is OpenELEC or LibreELEC
+it will perform a hard reset command followed by a reboot.
+
+CODE:  Fresh_Install([keep_addons, ignore, keepdb)
+
+AVAILABLE PARAMS:
+
+    keep_addons  -  This is optional, if you have specific add-ons you want to omit
+    from the wipe (leave intact) then just enter a list of add-on id's here. The code
+    will determine from the addon.xml file which dependencies and sub-dependencies are
+    required for that add-on so there's no need to create a huge list, you only need to
+    list the master add-on id's. For example if you want to keep the current skin and
+    your add-on you would use: keep_addons=['plugin.program.myaddon',System('currentskin')]
+    and all addons/dependencies associated with those two add-ons will be added to the ignore
+    list.
+
+    ignore  -  This is optional, you can send through a list of paths you want to omit from
+    the wipe. You can use folder paths to skip the whole folder or you can use individual
+    file paths. Please make sure you use the physical path and not special://
+    So before creating your list make sure you use xbmc.translatePath()
+
+    keepdb  -  By default this is set to True which means the code will keep all the Kodi databases
+    intact and perform a profile reload once wipe is complete. This will mean addons, video, music,
+    epg, ADSP and viewtypes databases will remain completely untouched and Kodi should be fine to use
+    without the need for a restart. If you set keepdb to False nothing will happen once the wipe has
+    completed and it's up to you to choose what to do in your main code. I would highly recommend an
+    ok dialog followed by xbmc.executebuiltin('Quit'). This will force Kodi to recreate all the relevant
+    databases when they re-open. If you try and continue using Kodi without restarting the databases
+    will not be recreated and you risk corruption.
+
+EXAMPLE CODE:
+if dialog.yesno('[COLOR gold]TOTAL WIPEOUT![/COLOR]','This will attempt give you a totally fresh install of Kodi.','Are you sure you want to continue?'):
+    if dialog.yesno('[COLOR gold]FINAL CHANCE!!![/COLOR]','If you click Yes this WILL attempt to wipe your install', '[COLOR=dodgerblue]ARE YOU 100% CERTAIN YOU WANT TO WIPE?[/COLOR]'):
+        clean_state = koding.Fresh_Install()
+~"""
+# If it's LE/OE and there are no files to ignore we do a hard reset
+    from systemtools import Cleanup_Textures
+    if ( len(ignore)==0 ) and ( len(keep_addons)==0 ) and ( xbmc.getCondVisibility("System.HasAddon(service.libreelec.settings)") or xbmc.getCondVisibility("System.HasAddon(service.openelec.settings)") ):
+        xbmc.log('OE DETECTED',2)
+        resetpath='storage/.cache/reset_oe'
+        Text_File(resetpath,'w')
+        xbmc.executebuiltin('reboot')
+    else:
+        from addons import Dependency_Check
+        xbmc.log('DOING MAIN WIPE',2)
+        skip_array = []
+        addonsdb = DB_Path_Check('addons')
+        textures = DB_Path_Check('Textures')
+        Cleanup_Textures(frequency=1,use_count=999999)
+        if len(keep_addons) > 0:
+            ignorelist = Dependency_Check(addon_id = keep_addons, recursive = True)
+            for item in ignorelist:
+                skip_array.append(xbmcaddon.Addon(id=item).getAddonInfo('path'))
+        skip_array.append(addonsdb)
+        skip_array.append(textures)
+        if keepdb:
+            try:
+                skip_array.append( DB_Path_Check('Epg') )
+            except:
+                xbmc.log('No EPG DB Found, skipping',2)
+            try:
+                skip_array.append( DB_Path_Check('MyVideos') )
+            except:
+                xbmc.log('No MyVideos DB Found, skipping',2)
+            try:
+                skip_array.append( DB_Path_Check('MyMusic') )
+            except:
+                xbmc.log('No MyMusic DB Found, skipping',2)
+            try:
+                skip_array.append( DB_Path_Check('TV') )
+            except:
+                xbmc.log('No TV DB Found, skipping',2)
+            try:
+                skip_array.append( DB_Path_Check('ViewModes') )
+            except:
+                xbmc.log('No ViewModes DB Found, skipping',2)
+            try:
+                skip_array.append( DB_Path_Check('ADSP') )
+            except:
+                xbmc.log('No ADSP DB Found, skipping',2)
+        for item in ignore:
+            skip_array.append(item)
+        Delete_Folders(filepath=HOME, ignore=skip_array)
+        Refresh()
+        if keepdb:
+            Refresh('profile')
+
+# Good option for wiping android data but not so good if using the app as a launcher!
+    # elif xbmc.getCondVisibility('System.Platform.Android'):
+    #     import subprocess
+    #     running   = Running_App()
+    #     cleanwipe = subprocess.Popen(['exec ''pm clear '+str(running)+''], executable='/system/bin/sh', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=Get_ID(setid=True)).communicate()[0]
 #----------------------------------------------------------------
 # TUTORIAL #
 def Get_Contents(path,folders=True,subfolders=False,exclude_list=[],full_path=True,filter=''):
@@ -833,6 +909,6 @@ except:
             return True
 
     except:
-        xbmc.log(Last_Error())
+        xbmc.log(Last_Error(),2)
         return False
 #----------------------------------------------------------------
