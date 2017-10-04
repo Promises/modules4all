@@ -1,3 +1,6 @@
+v0.5.33
+- removed 4kmovies
+- removed streamdream
 v0.5.32
 - Tweaks to a number of scrapers
 - added dudmovies
