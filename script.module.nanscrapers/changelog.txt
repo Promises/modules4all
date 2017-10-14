@@ -1,3 +1,13 @@
+v0.5.36
+- added moviewatcher
+- added freedownload
+- added UKTVPlay
+- added dl3
+- fixed Dizi720
+- tweaked thewatchseries
+- tweaked fullmovies24
+- fixed UltraMovie
+- fixed hddizi
 v0.5.35
 - added oneonline
 - added serieswatch
