@@ -2127,12 +2127,35 @@ distros so if you know of any improved code please do pass on. Thank you.
 PRINT TO LOG - DEBUG MODE:
 Print to the Kodi log but only if debugging is enabled in settings.xml
 
-	CODE: dolog(string)
-	string is your text you want printed to log.
+	CODE: koding.dolog(string, [my_debug])
+
+	AVAILABLE PARAMS:
+
+	    (*) string  -  This is your text you want printed to log.
+
+	    my_debug  -  This is optional, if you set this to True you will print
+	    to the log regardless of what the debug setting is set at in add-on settings.
+
+	    line_info - By default this is set to True and will show the line number where
+	    the dolog command was called from along with the filepath it was called from.
 
 	EXAMPLE CODE:
-		koding.dolog(string='Quick test to see if this gets printed to the log', my_debug=True)
-		dialog.ok('[COLOR gold]CHECK LOGFILE[/COLOR]','If you check your log file you should be able to see a new test line we printed.')
+		koding.dolog(string='Quick test to see if this gets printed to the log', my_debug=True, line_info=True)
+		dialog.ok('[COLOR gold]CHECK LOGFILE 1[/COLOR]','If you check your log file you should be able to see a new test line we printed and immediately below that should be details of where it was called from.')
+		koding.dolog(string='This one should print without the line and file info', my_debug=True, line_info=False)
+		dialog.ok('[COLOR gold]CHECK LOGFILE 2[/COLOR]','If you check your log file again you should now be able to see a new line printed but without the file/line details.')
+
+------------------------------------------------------------------------------------------
+
+PYTHON VERSION:
+Return the current version of Python as a string. Very useful if you need to find out whether or not to return
+https links (Python 2.6 is not SSL friendly).
+
+	CODE: Python_Version()
+
+	EXAMPLE CODE:
+	py_version = koding.Python_Version()
+	dialog.ok('[COLOR gold]PYTHON VERSION[/COLOR]','You are currently running:','Python v.%s'%py_version)
 
 ------------------------------------------------------------------------------------------
 
