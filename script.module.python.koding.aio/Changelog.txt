@@ -1,3 +1,7 @@
+v.0.9.8.7:
+- Added new Python_Version function to return current running version of Python
+- Added beautifulsoup to addon.xml as dependency
+
 v.0.9.8.6:
 - Improved Fresh_Install function, now multi-platform and can add paths/addons to ignore
 - Fixed the Delete_Folders function, was removing sub-folders from items in ignore list

@@ -320,6 +320,21 @@ koding.Network_Settings()
         os.system('nm-connection-editor')
 #----------------------------------------------------------------
 # TUTORIAL #
+def Python_Version():
+    """
+Return the current version of Python as a string. Very useful if you need
+to find out whether or not to return https links (Python 2.6 is not SSL friendly).
+
+CODE: Python_Version()
+
+EXAMPLE CODE:
+py_version = koding.Python_Version()
+dialog.ok('[COLOR gold]PYTHON VERSION[/COLOR]','You are currently running:','Python v.%s'%py_version)
+~"""
+    py_version = '%s.%s'%(sys.version_info[0],sys.version_info[1])
+    return py_version
+#----------------------------------------------------------------
+# TUTORIAL #
 def Refresh(r_mode=['addons', 'repos'], profile_name='default'):
     """
 Refresh a number of items in kodi, choose the order they are
