@@ -1,3 +1,6 @@
+v.0.9.8.9:
+- Removed debugging info in sleep functions.
+
 v.0.9.8.8:
 - Added check on web based functions, attempt to auto change url's to http instead of https if Python version is lower than 2.7
 - Added new option to dolog function which can show line number and file where the dolog command was called from. Thanks to OptimusGreen for the suggestion and line number code.

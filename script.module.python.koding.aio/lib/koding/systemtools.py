@@ -601,7 +601,6 @@ dialog.ok('FUNCTION COMPLETE','Of course we cannot read that file in just 10 sec
     while thread_alive and counter <= kill_time:
         xbmc.sleep(1000)
         thread_alive = my_thread.isAlive()
-        xbmc.log('%s thread alive for %s seconds' % (function, counter))
         counter += 1
     if show_busy:
         Show_Busy(False)
@@ -640,7 +639,6 @@ dialog.ok('WINDOW CLOSED','The window has now been closed so this dialog code ha
 # Do not get stuck in an infinite loop. Check x amount of times and if condition isn't met after x amount it quits
     while not okwindow and counter < count:
         xbmc.sleep(100)
-        dolog('### %s not active - sleeping (%s)' % (window_type, counter))
         okwindow = xbmc.getCondVisibility('Window.IsActive(%s)' % window_type)
         counter += 1
 
