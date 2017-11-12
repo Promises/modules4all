@@ -60,7 +60,7 @@ class movieflix(Scraper):
                                     'origin':self.base_link, 'referer':start_url, 'user-agent':User_Agent,
                                     'x-requested-with':'XMLHttpRequest'}
                         
-                        request_url = '%s/ajax/ine.php' %self.base_link
+                        request_url = '%s/ajax/zuxkvfdvfn.php' %self.base_link
                         postdata={'action':'getMovieEmb','idEl':id,'token':token,'elid':TIME}
                         
                         links = requests.post(request_url, data=postdata,verify=False, headers=headers).content
@@ -89,6 +89,8 @@ class movieflix(Scraper):
                                 else:
                                     qual='DVD'                                
                                 self.sources.append({'source': source_base,'quality': qual,'scraper': self.name,'url': link,'direct': False})
+                            elif 'vidnodessl' in link:
+                                self.sources.append({'source': 'VidnodeSSL','quality': '720p','scraper': self.name,'url': link,'direct': True})
                             else:
                                 self.sources.append({'source': source_base,'quality': 'Unknown','scraper': self.name,'url': link,'direct': False})            
             return self.sources
@@ -142,7 +144,7 @@ class movieflix(Scraper):
                                     'origin':self.base_link, 'referer':item_url, 'user-agent':User_Agent,
                                     'x-requested-with':'XMLHttpRequest'}
                         
-                        request_url = '%s/ajax/ine.php' %self.base_link
+                        request_url = '%s/ajax/zuxkvfdvfn.php' %self.base_link
                         postdata={'action':'getEpisodeEmb','idEl':id,'token':token,'elid':TIME}
                         
                         links = requests.post(request_url, data=postdata,verify=False, headers=headers).content
@@ -171,6 +173,8 @@ class movieflix(Scraper):
                                 else:
                                     qual='DVD'
                                 self.sources.append({'source': source_base,'quality': qual,'scraper': self.name,'url': link,'direct': False})
+                            elif 'vidnodessl' in link:
+                                self.sources.append({'source': 'VidnodeSSL','quality': '720p','scraper': self.name,'url': link,'direct': True})
                             else:
                                 self.sources.append({'source': source_base,'quality': 'Unknown','scraper': self.name,'url': link,'direct': False})              
             return self.sources

@@ -89,6 +89,7 @@ class Mfree(Scraper):
                     return self.sources(episode_url, "SD")
 
     def sources(self, url, quality):
+        print 'Check Scrape:  URL passing = %s qual = %s' %(url,quality)
         sources = []
         try:
             headers = {'User-Agent': random_agent(),
@@ -96,13 +97,17 @@ class Mfree(Scraper):
                        'Referer': url,
                        'Host': 'm4ufree.info'
 }
-            html = BeautifulSoup(self.scraper.get(url, headers=headers, timeout=30).content)
-            servers = html.findAll("span", attrs={'class': re.compile(".*?btn-eps.*?")})
+            html = requests.get(url, headers=headers, timeout=30).content
+            #print 'pagegw'+html
+            servers = re.compile('class="btn-eps.+?link="(.+?)"',re.DOTALL).findall(html)
             for server in servers:
                 try:
-                    server_url = '/ajax.php?token=m4ufreeisthebest1&data==%s' % server["link"]
-                    server_url = urlparse.urljoin(self.base_link, server_url)
-                    server_html = self.scraper.get(server_url, headers=headers, timeout=30).content
+                    server_url = '%s/ajax_new.php' %(self.base_link) 
+                    form_data = {'m4u':server} 
+                    
+                    #print 'check url>>> '+server_url
+                    server_html = requests.post(server_url, data=form_data,headers=headers, timeout=30).content
+
                     if '<h1> Plz visit m4ufree.info for this movie </h1>' in server_html:
                         server_url = '/ajax-tk.php?tk=tuan&v=%s' % server["link"]
                         server_url = urlparse.urljoin(self.base_link, server_url)

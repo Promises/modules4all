@@ -73,14 +73,24 @@ class carthd(Scraper):
                                 source = source_base.split(' -')[0]
                                 quality = source_base.split(' - ')[1]
                                 self.sources.append({'source': source,'quality': quality,'scraper': self.name,'url': link,'direct': True})
+                            elif 'googleuser' in source_base:
+                                if '1080' in source_base:
+                                    qual = '1080p'
+                                elif '720' in source_base:
+                                    qual='720p'
+                                else:
+                                    qual='DVD'
+                                self.sources.append({'source': 'GoogleLink','quality': qual,'scraper': self.name,'url': link,'direct': True})
                             elif 'googleapis' in source_base:
                                 self.sources.append({'source': 'GoogleLink','quality': '720P','scraper': self.name,'url': link,'direct': True})
                             elif 'streamango.com' in link:
-                                get_res=requests.get(final_url,headers=headers,timeout=5).content
+                                get_res=requests.get(link,headers=headers,timeout=5).content
                                 qual = re.compile('{type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(get_res)[0]
                                 self.sources.append({'source': source_base, 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})
                             elif 'openload' in link:
                                 self.sources.append({'source': source_base,'quality': 'DVD','scraper': self.name,'url': link,'direct': False})
+                            elif 'vidnodessl' in link:
+                                self.sources.append({'source': 'VidnodeSSL','quality': '720p','scraper': self.name,'url': link,'direct': True})
                             else:
                                 self.sources.append({'source': source_base,'quality': 'Unknown','scraper': self.name,'url': link,'direct': False})            
             return self.sources
@@ -145,14 +155,24 @@ class carthd(Scraper):
                             source = source_base.split(' -')[0]
                             quality = source_base.split(' - ')[1]
                             self.sources.append({'source': source,'quality': quality,'scraper': self.name,'url': link,'direct': True})
+                        elif 'googleuser' in source_base:
+                            if '1080' in source_base:
+                                qual = '1080p'
+                            elif '720' in source_base:
+                                qual='720p'
+                            else:
+                                qual='DVD'
+                            self.sources.append({'source': 'GoogleLink','quality': qual,'scraper': self.name,'url': link,'direct': True})
                         elif 'googleapis' in source_base:
                             self.sources.append({'source': 'GoogleLink','quality': '720P','scraper': self.name,'url': link,'direct': True})                        
                         elif 'streamango.com' in link:
-                            get_res=requests.get(final_url,headers=headers,timeout=5).content
+                            get_res=requests.get(link,headers=headers,timeout=5).content
                             qual = re.compile('{type:"video/mp4".+?height:(.+?),',re.DOTALL).findall(get_res)[0]
                             self.sources.append({'source': source_base, 'quality': qual, 'scraper': self.name, 'url': link,'direct': False})
                         elif 'openload' in link:
                             self.sources.append({'source': source_base,'quality': 'DVD','scraper': self.name,'url': link,'direct': False})
+                        elif 'vidnodessl' in link:
+                                self.sources.append({'source': 'VidnodeSSL','quality': '720p','scraper': self.name,'url': link,'direct': True})
                         else:
                             self.sources.append({'source': source_base,'quality': 'Unknown','scraper': self.name,'url': link,'direct': False})              
             return self.sources
