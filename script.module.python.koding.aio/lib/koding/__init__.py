@@ -146,7 +146,9 @@ but without the file/line details.')
     if DEBUG == 'true' or my_debug:
         xbmc.log('### %s (%s) : %s'%(ADDON_ID,AddonVersion,string), level=xbmc.LOGNOTICE)
     if line_info:
-        xbmc.log('^ Line No. %s  |  File: %s'%(inspect.currentframe().f_back.f_lineno,Caller('path')),level=xbmc.LOGNOTICE)
+        from inspect import getframeinfo, stack
+        caller = getframeinfo(stack()[1][0])
+        xbmc.log('^ Line No. %s  |  File: %s'%(caller.lineno,caller.filename),level=xbmc.LOGNOTICE)
 #----------------------------------------------------------------
 def Check_Addons(addons):
     """ internal command ~"""

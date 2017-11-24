@@ -493,6 +493,35 @@ installed add-ons. The dictionary will contain "addonid" and "type" e.g. 'xbmc.p
 
 ------------------------------------------------------------------------------------------
 
+SETTINGS - CREATE CUSTOM ADD-ON SETTINGS:
+All credit goes to OptimusGREEN for this module.
+
+This will create a new settings file for your add-on which you can read and write to. This is separate
+to the standard settings.xml and you can call the file whatever you want, however you would presumably
+call it something other than settings.xml as that is already used by Kodi add-ons.
+
+	CODE:  XML(path)
+
+	AVAILABLE CLASSES:
+
+	    ParseValue  -  This class will allow you to get the value of an item in these custom settings.
+	    
+	    SetValue  -  This class allows you to set a value to the custom settings. If the settings.xml doesn't exist it will be automatically created so long as the path given in XML is writeable.
+
+
+	EXAMPLE CODE:
+		myXmlFile = "special://userdata/addon_data/script.module.python.koding.aio/timefile.xml"
+		timefile = koding.xml(myXmlFile)
+		getSetting = timefile.ParseValue
+		setSetting = timefile.SetValue
+		dialog.ok('[COLOR gold]CHECK SETTINGS[/COLOR]','If you take a look in the addon_data folder for python koding a new file called timefile.xml will be created when you click OK.')
+		setSetting("autorun", "true")
+		autoRun = getSetting("autorun")
+		dialog.ok('[COLOR gold]AUTORUN VALUE[/COLOR]','The value of autorun in these new settings is [COLOR dodgerblue]%s[/COLOR].[CR][CR]Press OK to delete this file.'%autoRun)
+		os.remove(xbmc.translatePath(myXmlFile))
+
+------------------------------------------------------------------------------------------
+
 TOGGLE ADD-ONS:
 Send through either a list of add-on ids or one single add-on id. The add-ons sent through will then be added
 to the addons*.db and enabled or disabled (depending on state sent through).

@@ -177,6 +177,98 @@ else:
     except:
         return False
 #----------------------------------------------------------------
+def Get_Mac(protocol = ''):
+    cont    = 0
+    counter = 0
+    mac     = ''
+    while mac == '' and counter < 5:
+        if sys.platform == 'win32': 
+            for line in os.popen("ipconfig /all"):
+                if protocol == 'wifi':
+                    if line.startswith('Wireless LAN adapter Wi'):
+                        cont = 1
+                    if line.lstrip().startswith('Physical Address') and cont == 1:
+                        mac = line.split(':')[1].strip().replace('-',':').replace(' ','')
+                        if len(mac) == 17:
+                            break
+                        else:
+                            mac = ''
+
+                else:
+                    if line.startswith('Ethernet adapter Ethernet:'):
+                        cont = 1
+                    if line.lstrip().startswith('Physical Address') and cont == 1:
+                        mac = line.split(':')[1].strip().replace('-',':').replace(' ','')
+                        if len(mac) == 17:
+                            break
+                        else:
+                            mac = ''
+
+        elif sys.platform == 'darwin': 
+            if protocol == 'wifi':
+                for line in os.popen("ifconfig en0 | grep ether"):
+                    if line.lstrip().startswith('ether'):
+                        mac = line.split('ether')[1].strip().replace('-',':').replace(' ','')
+                        if len(mac) == 17:
+                            break
+                        else:
+                            mac = ''
+
+            else:
+                for line in os.popen("ifconfig en1 | grep ether"):
+                    if line.lstrip().startswith('ether'):
+                        mac = line.split('ether')[1].strip().replace('-',':').replace(' ','')
+                        if len(mac) == 17:
+                            break
+                        else:
+                            mac = ''
+
+        elif xbmc.getCondVisibility('System.Platform.Android'):
+            try:
+                if protocol == 'wifi':
+                    readfile = open('/sys/class/net/wlan0/address', mode='r')
+                else:
+                    readfile = open('/sys/class/net/eth0/address', mode='r')
+                mac = readfile.read()
+                readfile.close()
+                mac = mac.replace(' ','')
+                mac = mac[:17]
+            except:
+                mac = ''
+
+        else:
+            if protocol == 'wifi':
+                for line in os.popen("/sbin/ifconfig"):
+                    if line.find('wlan0') > -1: 
+                        mac = line.split()[4]
+                        if len(mac) == 17:
+                            break
+
+                    elif line.startswith('en'):
+                        if 'Ethernet'in line and 'HWaddr' in line:
+                            mac = line.split('HWaddr')[1].strip()
+                            if len(mac) == 17:
+                                break
+
+            else:
+               for line in os.popen("/sbin/ifconfig"): 
+                    if line.find('eth0') > -1: 
+                        mac = line.split()[4] 
+                        if len(mac) == 17:
+                            break
+
+                    elif line.startswith('wl'):
+                        if 'Ethernet'in line and 'HWaddr' in line:
+                            mac = line.split('HWaddr')[1].strip()
+                            if len(mac) == 17:
+                                break
+        if mac == '':
+            counter += 1
+    xbmc.log('MAC: %s'%mac)
+    if mac == '':
+        return 'Unknown'
+    return str(mac)
+#-----------------------------------------------------------------------------
 # TUTORIAL #
 def Grab_Log(log_type = 'std', formatting = 'original', sort_order = 'reverse'):
     """

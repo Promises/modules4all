@@ -1,3 +1,11 @@
+v.0.9.9.1:
+- Fixed the dolog function, now showing correct file and line numbers
+- Added xml function which will allow for creation/editing of completely new and separate settings.xml files for your add-ons. All credit goes to OptimusGreen for this code.
+- Edited tutorials section so it also picks up classes as well as functions.
+
+v.0.9.9.0:
+- Added compatibility for Windows 10 on creating paths
+
 v.0.9.8.9:
 - Removed debugging info in sleep functions.
 

@@ -19,18 +19,121 @@
 
 import os
 import shutil
+import os
 import sys
 import xbmc
 import xbmcaddon
 import xbmcgui
 
-from systemtools import Last_Error
+from systemtools    import Last_Error
+from xml.etree      import ElementTree
 
 dp       = xbmcgui.DialogProgress()
 dialog   = xbmcgui.Dialog()
 HOME     = xbmc.translatePath('special://home')
 PROFILE  = xbmc.translatePath('special://profile')
 DATABASE = os.path.join(PROFILE,'Database')
+
+#----------------------------------------------------------------    
+# TUTORIAL #
+class xml(object):
+    """
+SETTINGS - CREATE CUSTOM ADD-ON SETTINGS:
+All credit goes to OptimusGREEN for this module.
+
+This will create a new settings file for your add-on which you can read and write to. This is separate
+to the standard settings.xml and you can call the file whatever you want, however you would presumably
+call it something other than settings.xml as that is already used by Kodi add-ons.
+
+CODE:  XML(path)
+
+AVAILABLE CLASSES:
+
+ParseValue  -  This class will allow you to get the value of an item in these custom settings.
+
+SetValue  -  This class allows you to set a value to the custom settings. If the settings.xml doesn't exist it will be automatically created so long as the path given in XML is writeable.
+
+
+EXAMPLE CODE:
+myXmlFile = "special://userdata/addon_data/script.module.python.koding.aio/timefile.xml"
+timefile = koding.xml(myXmlFile)
+getSetting = timefile.ParseValue
+setSetting = timefile.SetValue
+dialog.ok('[COLOR gold]CHECK SETTINGS[/COLOR]','If you take a look in the addon_data folder for python koding a new file called timefile.xml will be created when you click OK.')
+setSetting("autorun", "true")
+autoRun = getSetting("autorun")
+dialog.ok('[COLOR gold]AUTORUN VALUE[/COLOR]','The value of autorun in these new settings is [COLOR dodgerblue]%s[/COLOR].[CR][CR]Press OK to delete this file.'%autoRun)
+os.remove(xbmc.translatePath(myXmlFile))
+~"""
+
+    def __init__(self, xmlFile, masterTag="settings", childTag="setting"):
+        self.xmlFile = xmlFile
+        self.masterTag = masterTag
+        self.childTag = childTag
+        if self.xmlFile.startswith('special://'):
+            self.xmlFile = xbmc.translatePath(self.xmlFile)
+
+    def ParseValue(self, settingID, settingIDTag="id", settingValueTag="value", addChild=False, formatXML=True):
+        if not os.path.exists(self.xmlFile):
+            return
+        tree = ElementTree.parse(self.xmlFile)
+        root = tree.getroot()
+        for child in root:
+            if child.attrib[settingIDTag] == settingID:
+                return child.attrib.get(settingValueTag)
+
+    def SetValue(self, settingID, newValue, settingIDTag="id", settingValueTag="value", addChild=False, asString=False, formatXML=True):
+        if not os.path.exists(self.xmlFile):
+            self.CreateXML(settingIDTag=settingIDTag, settingValueTag=settingValueTag, addChild=addChild, formatXML=formatXML)
+        tree = ElementTree.parse(self.xmlFile)
+        root = tree.getroot()
+        targetChild = None
+        for child in root:
+            if child.attrib[settingIDTag] == settingID:
+                targetChild = child
+        if targetChild is None:
+            self.AppendChild(root, settingID=settingID, newValue=newValue, settingIDTag=settingIDTag, settingValueTag=settingValueTag)
+        else:
+            for child in root:
+                if child.attrib[settingIDTag] == settingID:
+                    child.attrib['%s' % (settingValueTag)] = '%s' % (newValue)
+        tree.write(self.xmlFile)
+        if asString:
+            readfile = open(self.xmlFile, 'r')
+            content = readfile.read()
+            readfile.close()
+            pretty = self.Prettify(content, asString=True)
+        else:
+            pretty = self.Prettify(self.xmlFile)
+        with open(self.xmlFile, "w") as f:
+            f.write(pretty)
+
+    def CreateXML(self, settingIDTag="id", settingValueTag="value", addChild=False, formatXML=True):
+        root = ElementTree.Element("%s" % self.masterTag)
+        if addChild:
+            sub = ElementTree.SubElement(root, "%s" % self.childTag)
+            sub.set(settingIDTag, "")
+            sub.set(settingValueTag, "")
+
+        tree = ElementTree.ElementTree(root)
+        tree.write(self.xmlFile)
+        if formatXML:
+            pretty = self.Prettify(self.xmlFile)
+            with open(self.xmlFile, "w") as f:
+                f.write(pretty)
+
+    def AppendChild(self, root, settingID, newValue, settingIDTag="id", settingValueTag="value"):
+        ElementTree.SubElement(root, self.childTag, attrib={settingIDTag: settingID, settingValueTag: newValue})
+        return root
+
+    def Prettify(self, elem, asString=False):
+        import xml.dom.minidom
+        if asString:
+            xml = xml.dom.minidom.parseString(elem)
+            pretty_xml_as_string = '\n'.join([line for line in xml.toprettyxml(indent=' ' * 2).split('\n') if line.strip()])
+        else:
+            pretty_xml_as_string = '\n'.join([line for line in xml.dom.minidom.parse(open(elem)).toprettyxml(indent=' ' * 2).split('\n') if line.strip()])
+        return pretty_xml_as_string
 #----------------------------------------------------------------    
 # Legacy code, now use new function Compress
 def Archive_Tree(sourcefile, destfile, exclude_dirs=['temp'], exclude_files=['kodi.log','kodi.old.log','xbmc.log','xbmc.old.log','spmc.log','spmc.old.log'], message_header = 'ARCHIVING', message = 'Creating archive'):

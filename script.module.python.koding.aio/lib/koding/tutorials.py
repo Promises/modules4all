@@ -53,6 +53,11 @@ def Grab_Tutorials():
                 for item in content_array:
                     item = item.strip()
                     full_array.append('%s~%s'%(item,file_path))
+            content_array = Find_In_Text(content=content, start='# TUTORIAL #\nclass ', end='\(', show_errors=False)
+            if content_array:
+                for item in content_array:
+                    item = item.strip()
+                    full_array.append('%s~%s'%(item,file_path))
 
 # Return a list of tutorials
     Add_Dir('[COLOR=gold]CREATE YOUR FIRST ADD-ON[/COLOR]',video_base+'Create_Addon.mov','play_video', folder=False, icon='', fanart='', description='How to create your own add-on using the Python Koding framework.')
@@ -67,7 +72,10 @@ def Show_Tutorial(url):
     name, filepath = url.split('~')
     filepath = urllib.unquote(filepath)
     readfile = Text_File(filepath,'r')
-    raw_find = Find_In_Text(content=readfile, start='# TUTORIAL #\ndef %s' % name,end='~"""')[0]
+    try:
+        raw_find = Find_In_Text(content=readfile, start='# TUTORIAL #\ndef %s' % name,end='~"""')[0]
+    except:
+        raw_find = Find_In_Text(content=readfile, start='# TUTORIAL #\nclass %s' % name,end='~"""')[0]
 # Check if an example code segment exists in the comments    
     if 'EXAMPLE CODE:' in raw_find:
         code = re.findall(r'(?<=EXAMPLE CODE:)(?s)(.*$)', raw_find)[0]
