@@ -12,15 +12,15 @@ user_headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:55.0) Gecko
 
 
 class grabby(Scraper):
-    domains = ['https://moviegrabber.tv']
+    domains = ['http://node.moviegrabber.tv']
     name = "GMovie"
     sources = []
 
     def __init__(self):
-        self.base_link = 'https://moviegrabber.tv'
-        self.info_link = 'https://moviegrabber.tv/backend/media/getDetails?id='
-        self.info_url = 'https://moviegrabber.tv/backend/media/getLinks?id='
-        self.search_url ='https://moviegrabber.tv/backend/media/search?q='
+        self.base_link = 'http://node.moviegrabber.tv'
+        self.info_link = 'http://node.moviegrabber.tv/backend/media/getDetails?id='
+        self.info_url = 'http://node.moviegrabber.tv/backend/media/getLinks?id='
+        self.search_url ='http://node.moviegrabber.tv/backend/media/search?q='
         self.sources = []
 
     def scrape_movie(self, title, year, imdb, debrid=False):
@@ -34,7 +34,7 @@ class grabby(Scraper):
                 if year == date:               
                     if clean_title(title).lower() in clean_title(link_title).lower():
 
-                        movie_link = 'https://moviegrabber.tv/videos/'+url_id
+                        movie_link = 'http://node.moviegrabber.tv/videos/'+url_id
                         self.get_source(url_id,movie_link)
                 
             return self.sources
@@ -51,7 +51,7 @@ class grabby(Scraper):
             for url_id,link_title in results:
                 #print 'tv check %s %s' %(url_id,link_title)
                 if clean_title(title).lower() in clean_title(link_title).lower():
-                    movie_link = 'https://moviegrabber.tv/videos/'+url_id
+                    movie_link = 'http://node.moviegrabber.tv/videos/'+url_id
                     
                     self.get_tv_source(url_id,movie_link,season,episode)
             return self.sources
